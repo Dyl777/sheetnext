@@ -31656,19 +31656,78 @@ class Vm {
 }
 class Pm {
   constructor(e) {
-    this._SN = e;
+    this._SN = e, this.messages = [
+      { role: "system", content: "You are a helpful spreadsheet assistant. Help the user with their data." }
+    ], this.apiUrl = "http://localhost:8000/v1/chat/completions", this.modelName = "local-model", this.apiKey = "sk-no-key";
   }
   chatInput(e) {
-    console.log("AI Chat Input:", e);
+    const t = this._SN.containerDom.querySelector(".sn-prompt-input");
+    t && (t.value = e, t.focus());
   }
   async conversation(e) {
-    console.log("AI Conversation Triggered with:", e);
+    if (!e || e.trim() === "") return;
+    const t = this._SN.containerDom.querySelector(".sn-chat-info");
+    if (!t) return;
+    this.messages.length === 1 && (t.innerHTML = ""), this._appendMessageToUI(e, "user"), this.messages.push({ role: "user", content: e });
+    const s = this._SN.containerDom.querySelector(".sn-prompt-input");
+    s && (s.value = "");
+    const o = this._appendMessageToUI("Thinking...", "ai", !0);
+    try {
+      const i = await fetch(this.apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: this.modelName,
+          messages: this.messages,
+          stream: !1
+        })
+      });
+      if (!i.ok)
+        throw new Error(`API Request failed: ${i.statusText}`);
+      const a = (await i.json()).choices[0].message.content;
+      this._removeMessageFromUI(o), this._appendMessageToUI(a, "ai"), this.messages.push({ role: "assistant", content: a });
+    } catch (i) {
+      console.error(i), this._removeMessageFromUI(o), this._appendMessageToUI(`Error: Could not connect to local inference engine. Ensure your server (vllm, sglang, etc.) is running at ${this.apiUrl}`, "error");
+    }
   }
   clearChat() {
-    console.log("AI Chat Cleared");
+    this.messages = [
+      { role: "system", content: "You are a helpful spreadsheet assistant. Help the user with their data." }
+    ];
+    const e = this._SN.containerDom.querySelector(".sn-chat-info");
+    e && (e.innerHTML = '<div style="padding: 10px; color: #666; font-size: 14px;">Context cleared.</div>');
   }
   handleFileChange(e) {
     console.log("AI file changed:", e);
+  }
+  _appendMessageToUI(e, t, s = !1) {
+    const o = this._SN.containerDom.querySelector(".sn-chat-info");
+    if (!o) return null;
+    const i = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, r = document.createElement("div");
+    return r.id = i, r.style.padding = "10px", r.style.margin = "10px", r.style.borderRadius = "var(--radius, 4px)", r.style.fontSize = "14px", r.style.lineHeight = "1.5", t === "user" ? (r.style.backgroundColor = "#e6f7ff", r.style.border = "1px solid #91d5ff", r.style.color = "#0050b3", r.innerHTML = `<strong>You:</strong><br>${this._escapeHTML(e)}`) : t === "ai" ? (r.style.backgroundColor = "#f6ffed", r.style.border = "1px solid #b7eb8f", r.style.color = "#237804", r.innerHTML = `<strong>Assistant:</strong><br>${s ? "<i>" + e + "</i>" : this._formatMarkdown(e)}`) : (r.style.backgroundColor = "#fff2f0", r.style.border = "1px solid #ffccc7", r.style.color = "#cf1322", r.innerHTML = `<strong>System:</strong><br>${this._escapeHTML(e)}`), o.appendChild(r), o.scrollTop = o.scrollHeight, i;
+  }
+  _removeMessageFromUI(e) {
+    const t = document.getElementById(e);
+    t && t.remove();
+  }
+  _escapeHTML(e) {
+    return e.replace(
+      /[&<>'"]/g,
+      (t) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      })[t] || t
+    );
+  }
+  _formatMarkdown(e) {
+    let t = this._escapeHTML(e);
+    return t = t.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"), t = t.replace(/```([\s\S]*?)```/g, '<pre style="background:#f5f5f5;padding:8px;border-radius:4px;overflow:auto;margin-top:5px;"><code>$1</code></pre>'), t = t.replace(/`([^`]*)`/g, '<code style="background:#f5f5f5;padding:2px 4px;border-radius:2px;">$1</code>'), t = t.replace(/\n/g, "<br>"), t;
   }
   _handlePastedImage() {
     return !1;

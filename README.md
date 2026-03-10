@@ -143,6 +143,20 @@ For example:
 - "Build a multi-sheet budget entry system with permissions and printing"
 - "Migrate an existing Excel template to an online editable version"
 
+### Integrating Local AI Models (Ollama, vLLM, sglang, llama.cpp)
+
+SheetNext's built-in AI Chat interface can natively connect to your own local inference engines, keeping your data entirely private! 
+
+To wire up the Chat UI to any OpenAI-compatible drop-in replacement:
+1. Ensure your local server is running (e.g., `vllm serve`, `ollama serve`, `sglang`, or `llama-server` from llama.cpp).
+2. Open `src/core/AI/AI.js` and update the connection details in the constructor so it matches your local runner's setup:
+    ```javascript
+    this.apiUrl = "http://localhost:8000/v1/chat/completions"; // Usually matches vLLM/sglang defaults
+    this.modelName = "local-model"; // Set your specific model namespace if using Ollama
+    this.apiKey = "sk-no-key";
+    ```
+3. Spin up the dev environment with `npm run dev` (or rebuild via `npm run build`) and click the Robot icon next to your formula bar to start interacting with your local model!
+
 ## 🎯 Use Cases
 
 - Online reporting systems, BI analytics front-ends, business dashboards

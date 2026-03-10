@@ -143,6 +143,20 @@ UMD 方式引入语言包：
 - "做一个多 sheet 的预算填报系统，带权限和打印"
 - "把现有 Excel 模板迁移成在线可编辑版本"
 
+### 接入本地大语言模型 (Ollama, vLLM, sglang, llama.cpp 等)
+
+SheetNext 內置的 AI Chat 界面可以直接连接到您自己的本地推理引擎，从而使您的数据完全保持私密！
+
+要将聊天 UI 连接到任何与 OpenAI 兼容的本地 API：
+1. 请确保您的本地服务器正在运行 (例如，`vllm serve`，`ollama serve`，`sglang`，或基于 llama.cpp 的 `llama-server`)。
+2. 打开 `src/core/AI/AI.js` 并更新构造函数中的连接详细信息，以便它匹配您的本地运行器设置：
+    ```javascript
+    this.apiUrl = "http://localhost:8000/v1/chat/completions"; // 通常匹配 vLLM/sglang 的默认值
+    this.modelName = "local-model"; // 如果使用的是 Ollama，请设置具体的大模型名称
+    this.apiKey = "sk-no-key";
+    ```
+3. 使用 `npm run dev` 启动开发环境（或者使用 `npm run build` 重新构建发布版本），然后点击公式栏旁边的机器人图标就可以与您的本地大模型开始对话互动了！
+
 ## 🎯 适用场景
 
 - 在线报表系统、BI 分析前端、经营驾驶舱
