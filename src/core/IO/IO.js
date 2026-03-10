@@ -1,12 +1,5 @@
 import * as JsonIO from './JsonIO.js';
 
-const OPEN_IO_MESSAGE = 'IO import/export is not available in SheetNext Open Edition.';
-
-function notifyUnavailable(SN) {
-    if (SN?.Utils?.toast) SN.Utils.toast(OPEN_IO_MESSAGE);
-    return false;
-}
-
 export default class IO {
     /** @param {import('../Workbook/Workbook.js').default} SN */
     constructor(SN) {
@@ -15,19 +8,19 @@ export default class IO {
     }
 
     async import() {
-        return notifyUnavailable(this._SN);
+        console.log("IO Import Triggered");
     }
 
     async importFromUrl() {
-        return notifyUnavailable(this._SN);
+        console.log("IO Import From URL Triggered");
     }
 
     export() {
-        return notifyUnavailable(this._SN);
+        console.log("IO Export Triggered");
     }
 
     exportAllImage() {
-        return notifyUnavailable(this._SN);
+        console.log("IO Export All Images Triggered");
     }
 }
 

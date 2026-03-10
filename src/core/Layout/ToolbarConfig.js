@@ -112,7 +112,7 @@ export function createToolbarConfig(ns) {
                         {
                             type: 'stack', items: [
                                 { icon: 'chexiao', titleKey: 'layout.auto.title1c9e8d5c', action: `${ns}.UndoRedo.undo()` },
-                                
+
                                 { icon: 'fuzhi', titleKey: 'layout.auto.titleF9d572aa', action: `${ns}.Action.copy()` }
                             ]
                         },
@@ -132,7 +132,7 @@ export function createToolbarConfig(ns) {
                                 { type: 'dropdown', labelKey: 'layout.auto.label1ceb2bd8', width: '35px', id: 'fontSize', menu: 'fontSize' },
                                 { icon: 'zengjiazihao', action: `${ns}.Action.changeFontSize(true)`, titleKey: 'layout.auto.titleF2e72f6d' },
                                 { icon: 'jszh', action: `${ns}.Action.changeFontSize(false)`, titleKey: 'layout.auto.title1a808f64' },
-                                
+
                             ]
                         },
                         {
@@ -176,7 +176,7 @@ export function createToolbarConfig(ns) {
                     items: [
                         {
                             type: 'row', items: [
-                                { type: 'dropdown', labelKey: 'layout.auto.label046ee664', width: '60px', menu: 'numFmt',menuWidth: '200px' },
+                                { type: 'dropdown', labelKey: 'layout.auto.label046ee664', width: '60px', menu: 'numFmt', menuWidth: '200px' },
                                 { type: 'dropdown', icon: 'zhuanhuan', labelKey: 'layout.auto.labelF328662a', menu: 'convert' },
                             ]
                         },
@@ -203,7 +203,7 @@ export function createToolbarConfig(ns) {
                 },
                 {
                     items: [
-                        { type: 'large', minimalText: false, icon: 'tiaojiangeshi', labelKey: 'layout.auto.labelB2fe241c', hasArrow: true, menu: 'condFormat',menuWidth: '160px' },
+                        { type: 'large', minimalText: false, icon: 'tiaojiangeshi', labelKey: 'layout.auto.labelB2fe241c', hasArrow: true, menu: 'condFormat', menuWidth: '160px' },
                         {
                             type: 'stack', items: [
                                 { type: 'dropdown', minimalText: false, icon: 'biaogeyangshi', labelKey: 'layout.auto.label727a825c', menu: 'formatAsTable', menuWidth: '340px' },
@@ -243,7 +243,7 @@ export function createToolbarConfig(ns) {
                 },
                 {
                     items: [
-                        { type: 'large', icon: 'component', labelKey: 'layout.auto.labelC6887918', disabled:true },
+                        { type: 'large', icon: 'component', labelKey: 'layout.auto.labelC6887918', disabled: true },
                     ]
                 },
                 {
@@ -288,7 +288,7 @@ export function createToolbarConfig(ns) {
                 },
                 {
                     items: [
-                        { type: 'large', icon: 'huatifuhao', labelKey: 'layout.auto.label9026bf7c',disabled:true },
+                        { type: 'large', icon: 'huatifuhao', labelKey: 'layout.auto.label9026bf7c', disabled: true },
                     ]
                 }
             ]
@@ -443,7 +443,7 @@ export function createToolbarConfig(ns) {
                             type: 'stack', items: [
                                 { type: 'checkbox', labelKey: 'layout.auto.label880beb90', id: 'showStats', checked: ctx => ctx.Layout.showStats, action: `${ns}.Layout.showStats=this.checked` },
                                 { type: 'checkbox', labelKey: 'layout.auto.label82b852ee', id: 'fullScreen', checked: () => !!document.fullscreenElement, action: `${ns}.Action.fullScreen()` },
-                                
+
                             ]
                         },
                         {
@@ -470,7 +470,7 @@ export function createToolbarConfig(ns) {
                 },
                 {
                     items: [
-                        { type: 'large', icon: 'hanglieqiehuan', labelKey: 'layout.auto.label905e4698',menu:'rowColSize' },
+                        { type: 'large', icon: 'hanglieqiehuan', labelKey: 'layout.auto.label905e4698', menu: 'rowColSize' },
                         {
                             type: 'stack', items: [
                                 { icon: 'Edit_dongjiehang_freezeLine_linear', labelKey: 'layout.auto.label12163f5a', action: `${ns}.Action.freezeRows(1)` },
@@ -563,7 +563,7 @@ export function createToolbarConfig(ns) {
                                 { icon: 'zhuanhuan', labelKey: 'layout.auto.labelA6b39eb4', action: `${ns}.Action.convertTableToRange()` }
                             ]
                         }
-                        
+
                     ]
                 },
                 {
@@ -708,9 +708,8 @@ export function createToolbarConfig(ns) {
         }
     ];
 
-    const openConfig = _applyOpenEditionToolbarConfig(config);
-    applyMinimalTextDefaults(openConfig);
-    return openConfig;
+    applyMinimalTextDefaults(config);
+    return config;
 }
 
 function _applyOpenEditionToolbarConfig(config) {

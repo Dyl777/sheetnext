@@ -1890,18 +1890,4 @@ font-size: 16px !important;
     }
 }
 
-/* Open Edition: AI removed */
-.sn-chat,
-.sn-ai-btn {
-    display: none !important;
-}
-
-.sn-input {
-    grid-template-columns: 160px auto;
-}
-
-@media (max-width: 900px) {
-    .sn-input {
-        grid-template-columns: 100px auto;
-    }
-}
+/* Open Edition limitations removed */

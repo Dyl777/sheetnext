@@ -1,29 +1,22 @@
-const OPEN_AI_MESSAGE = 'AI module is not available in SheetNext Open Edition.';
-
-function notifyUnavailable(SN) {
-    if (SN?.Utils?.toast) SN.Utils.toast(OPEN_AI_MESSAGE);
-    return false;
-}
-
 export default class AI {
     constructor(SN) {
         this._SN = SN;
     }
 
-    chatInput() {
-        return notifyUnavailable(this._SN);
+    chatInput(text) {
+        console.log("AI Chat Input:", text);
     }
 
-    async conversation() {
-        return notifyUnavailable(this._SN);
+    async conversation(text) {
+        console.log("AI Conversation Triggered with:", text);
     }
 
     clearChat() {
-        return notifyUnavailable(this._SN);
+        console.log("AI Chat Cleared");
     }
 
-    handleFileChange() {
-        return notifyUnavailable(this._SN);
+    handleFileChange(event) {
+        console.log("AI file changed:", event);
     }
 
     _handlePastedImage() {

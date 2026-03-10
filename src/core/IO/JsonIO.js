@@ -1,6 +1,5 @@
 ﻿
 import { IndexTable, isCellDataEqual } from "./helpers.js";
-import { _gl } from "./IO.js";
 import AutoFilter from "../AutoFilter/AutoFilter.js";
 import Table from "../Table/Table.js";
 import CF from "../CF/CF.js";
@@ -720,7 +719,7 @@ export async function getData() {
         },
         sheets: []
     };
-    const traceMark = _gl(this)?._createTraceMark?.('json');
+    const traceMark = this._SN?._createTraceMark?.('json');
     if (traceMark) workbookData._snTrace = traceMark;
 
     for (const sheet of SN.sheets) {
