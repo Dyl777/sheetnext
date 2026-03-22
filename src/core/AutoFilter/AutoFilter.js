@@ -1,6 +1,6 @@
 /**
  * 自动筛选模块
- * @title 🔍 自动筛选
+ * @title Auto Filter
  * 负责管理工作表筛选状态（支持 Sheet 级 + Table 级独立筛选）
  * @class
  */

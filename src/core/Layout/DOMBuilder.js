@@ -46,7 +46,7 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                     <div class="sn-chat">
                         <div class="sn-chat-input">
                             <div class="sn-chat-head d-flex justify-content-between align-items-center">
-                                &#x1F916; ${t('ai.panel.title', 'SheetNext AI')}
+                                ${getSvg('ai_insights')} ${t('ai.panel.title', 'SheetNext AI')}
                                 <span onclick="${ns}.Layout.showAIChatWindow=!${ns}.Layout.showAIChatWindow" class="sn-svg-btn">${getSvg('xiaochuangbofang')}</span>
                             </div>
                             <div class="upImgList"></div>
@@ -55,10 +55,10 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                                 <button class="AI-btn sn-tooltip" onclick="${ns}.AI.clearChat()" title="${t('ai.panel.resetContext', 'Reset Context')}">
                                     ${getSvg('clear','sn-f16')}
                                 </button>
-                                <button class="AI-btn sn-tooltip" onclick="${ns}.containerDom.querySelector('.sn-file-input').click()" title="${t('ai.panel.uploadImage', 'Upload Image')}">
+                                <button class="AI-btn sn-tooltip" onclick="${ns}.containerDom.querySelector('.sn-file-input').click()" title="${t('ai.panel.uploadImage', 'Upload File')}">
                                     ${getSvg('tupian1', 'fj-ico')}
                                 </button>
-                                <input type="file" class="sn-file-input" accept="image/*" style="display: none;" multiple onchange="${ns}.AI.handleFileChange(event)">
+                                <input type="file" class="sn-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xlsx" style="display: none;" multiple onchange="${ns}.AI.handleFileChange(event)">
                                 <button class="sn-send-btn" onclick="${ns}.AI.conversation(${ns}.containerDom.querySelector('.sn-prompt-input').value)">
                                     ${getSvg('ai_send')}
                                 </button>
@@ -71,7 +71,7 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                             </div>
                             <div class="chat-system sn-chat-examples">
                                 <div class="sn-chat-examples-header">
-                                    <span class="sn-chat-examples-title">&#x1F4A1; ${t('ai.panel.examplesTitle')}</span>
+                                    <span class="sn-chat-examples-title">${getSvg('licai')} ${t('ai.panel.examplesTitle')}</span>
                                 </div>
                                 <ul>
                                     <li onclick="${ns}.AI.chatInput(this.innerText);">${t('ai.panel.examples.item1')}</li>
@@ -87,7 +87,7 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                     </div>
                     <div class="sn-content">
                         <div class="sn-input">
-                            <span class="sn-ai-btn sn-text-center" onclick="${ns}.Layout.showAIChat=!${ns}.Layout.showAIChat">&#x1F916;</span>
+                            <span class="sn-ai-btn sn-text-center" onclick="${ns}.Layout.showAIChat=!${ns}.Layout.showAIChat">${getSvg('ai_insights')}</span>
                             <div class="sn-area-box">
                                 <input type="text" class="sn-area-input" value="A1">
                                 <span class="sn-area-arrow"></span>
@@ -160,8 +160,8 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                         <div class="sn-pivot-header">
                             <span class="sn-pivot-title">PivotTable Fields</span>
                             <div class="sn-pivot-header-btns">
-                                <button class="sn-pivot-header-btn" data-action="settings" title="Settings">⚙</button>
-                                <button class="sn-pivot-header-btn" data-action="close" title="Close">✕</button>
+                                <button class="sn-pivot-header-btn" data-action="settings" title="Settings">${getSvg('shezhi')}</button>
+                                <button class="sn-pivot-header-btn" data-action="close" title="Close">${getSvg('cuowu')}</button>
                             </div>
                         </div>
                         <div class="sn-pivot-search">

@@ -1155,7 +1155,7 @@ export class ToolbarBuilder {
         return this._trHtml(`
             <div class="sn-highlight-panel" onclick="${ns}.Canvas.setHighlight(event)">
                 <div class="sn-hl-row">
-                    <span class="sn-hl-btn sn-hl-off" data-color="" title="${this._trEn('Turn Off Highlight', 'Turn Off Highlight')}">✕</span>
+                    <span class="sn-hl-btn sn-hl-off" data-color="" title="${this._trEn('Turn Off Highlight', 'Turn Off Highlight')}">${getSvg('cuowu')}</span>
                     ${colors.slice(0, 7).map(btn).join('')}
                 </div>
                 <div class="sn-hl-row">

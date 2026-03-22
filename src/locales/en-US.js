@@ -928,6 +928,101 @@ const enUS = {
             "resetContext": "Reset Context",
             "title": "SheetNext AI",
             "uploadImage": "Upload Image"
+        },
+        "tools": {
+            "generateFormula": "AI Generate Formula",
+            "analyzeData": "AI Analyze Data",
+            "generateTemplate": "AI Generate Template",
+            "autoFormat": "AI Auto Format",
+            "dataInsights": "AI Data Insights",
+            "generateFormulaTitle": "Generate formulas using AI",
+            "analyzeDataTitle": "Analyze selected data with AI",
+            "generateTemplateTitle": "Create templates with AI",
+            "autoFormatTitle": "Auto-format cells with AI",
+            "dataInsightsTitle": "Get AI-powered data insights"
+        },
+        "templates": {
+            "budget": "Monthly Budget",
+            "invoice": "Invoice",
+            "timesheet": "Weekly Timesheet",
+            "inventory": "Inventory Tracker",
+            "crm": "CRM Contacts",
+            "project": "Project Tracker",
+            "calendar": "Calendar",
+            "expense": "Expense Report",
+            "schedule": "Schedule",
+            "report": "Report"
+        },
+        "messages": {
+            "generating": "AI is generating...",
+            "analyzing": "AI is analyzing...",
+            "formatting": "AI is formatting...",
+            "error": "AI request failed. Please check your llama-server connection.",
+            "noSelection": "Please select a range first.",
+            "noData": "No data found in selected range.",
+            "success": "AI operation completed successfully."
+        },
+        "config": {
+            "title": "AI Configuration",
+            "url": "API URL",
+            "urlPlaceholder": "http://localhost:8080/v1/chat/completions",
+            "model": "Model Name",
+            "modelPlaceholder": "llama",
+            "maxTokens": "Max Tokens",
+            "temperature": "Temperature",
+            "streaming": "Enable Streaming",
+            "tools": "Enable Tool Calling",
+            "rag": "Enable RAG (Document Q&A)",
+            "save": "Save Configuration",
+            "cancel": "Cancel",
+            "reset": "Reset to Defaults"
+        },
+        "conversations": {
+            "title": "Conversations",
+            "new": "New Conversation",
+            "delete": "Delete Conversation",
+            "export": "Export Conversation",
+            "exportJson": "Export as JSON",
+            "exportMarkdown": "Export as Markdown",
+            "switch": "Switch Conversation",
+            "clear": "Clear Messages",
+            "rename": "Rename Conversation",
+            "noConversations": "No conversations yet",
+            "active": "Active",
+            "createdAt": "Created",
+            "updatedAt": "Last Updated",
+            "messages": "Messages"
+        },
+        "rag": {
+            "title": "Document Q&A (RAG)",
+            "enabled": "RAG Enabled",
+            "disabled": "RAG Disabled",
+            "addDocument": "Add Document",
+            "removeDocument": "Remove Document",
+            "searchDocuments": "Search Documents",
+            "indexedPages": "Indexed Pages",
+            "clearIndex": "Clear Index",
+            "stats": "RAG Statistics",
+            "chunkSize": "Chunk Size",
+            "topK": "Top Results",
+            "similarity": "Similarity Threshold",
+            "noDocuments": "No documents indexed",
+            "documentAdded": "Document added to index",
+            "documentRemoved": "Document removed from index",
+            "searchResults": "Search Results",
+            "retrievedFrom": "Retrieved from Page"
+        }
+    },
+    "layout": {
+        "auto": {
+            "tracking": "Track User",
+            "trackingTitle": "Track user movements and sessions",
+            "trackingActive": "Tracking Active",
+            "trackingStopped": "Tracking Stopped",
+            "audioRecord": "Record Audio",
+            "audioRecordTitle": "Record speech and save to database",
+            "audioRecording": "Recording...",
+            "audioSaved": "Audio saved successfully"
         }
     },
     "autoFilter": {

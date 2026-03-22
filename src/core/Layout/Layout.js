@@ -16,7 +16,7 @@ import StateSync from './StateSync.js';
 
 /**
  * 布局与工具栏管理
- * @title 🎨 UI布局
+ * @title UI Layout
  * @class
  */
 export default class Layout {
@@ -819,11 +819,36 @@ export default class Layout {
             <div class="sn-pivot-zone-item" data-index="${index}" data-subtotal="${subtotal}" data-df-index="${dataFieldIndex}" draggable="true">
                 <span class="sn-pivot-zone-item-name">${name}</span>
                 <div class="sn-pivot-zone-item-actions">
-                    <button class="sn-pivot-zone-item-action sn-pivot-zone-item-remove" title="${t('core.layout.layout.pivotPanel.remove')}">✕</button>
-                    <button class="sn-pivot-zone-item-action sn-pivot-zone-item-settings" title="${t('core.layout.layout.pivotPanel.fieldSettings')}">⚙</button>
+                    <button class="sn-pivot-zone-item-action sn-pivot-zone-item-remove" title="${t('core.layout.layout.pivotPanel.remove')}">${getSvg('cuowu')}</button>
+                    <button class="sn-pivot-zone-item-action sn-pivot-zone-item-settings" title="${t('core.layout.layout.pivotPanel.fieldSettings')}">${getSvg('shezhi')}</button>
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * Update tracking button state
+     */
+    updateTrackingButton() {
+        const btn = this.SN.containerDom.querySelector('#trackingBtn');
+        if (btn) {
+            const isTracking = this.SN.Tracking?.getTrackingStatus();
+            if (isTracking) {
+                btn.classList.add('active');
+                btn.querySelector('.sn-svg')?.setAttribute('data-icon', 'tracking_active');
+            } else {
+                btn.classList.remove('active');
+                btn.querySelector('.sn-svg')?.setAttribute('data-icon', 'tracking');
+            }
+        }
+        
+        // Show notification
+        if (this.SN.Tracking) {
+            const status = isTracking 
+                ? this.SN.t('layout.auto.trackingActive', 'Tracking Active')
+                : this.SN.t('layout.auto.trackingStopped', 'Tracking Stopped');
+            this.SN.Utils.toast(status);
+        }
     }
 
     _bindPivotPanelEvents(pt) {

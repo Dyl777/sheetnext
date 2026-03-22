@@ -366,6 +366,29 @@ export function createToolbarConfig(ns) {
                             ]
                         }
                     ]
+                },
+                {
+                    items: [
+                        {
+                            type: 'large',
+                            icon: 'ai_generate',
+                            labelKey: 'layout.formula.ai.generateFormula',
+                            action: `${ns}.Action.openAIGenerateFormula()`,
+                            titleKey: 'layout.formula.ai.generateFormulaTitle'
+                        },
+                        {
+                            type: 'row', items: [
+                                { icon: 'ai_analyze', labelKey: 'layout.formula.ai.analyzeData', action: `${ns}.Action.openAIAnalyzeData()`, titleKey: 'layout.formula.ai.analyzeDataTitle' },
+                                { icon: 'ai_template', labelKey: 'layout.formula.ai.generateTemplate', action: `${ns}.Action.openAIGenerateTemplate()`, titleKey: 'layout.formula.ai.generateTemplateTitle' },
+                            ]
+                        },
+                        {
+                            type: 'row', items: [
+                                { icon: 'ai_format', labelKey: 'layout.formula.ai.autoFormat', action: `${ns}.Action.openAIAutoFormat()`, titleKey: 'layout.formula.ai.autoFormatTitle' },
+                                { icon: 'ai_insights', labelKey: 'layout.formula.ai.dataInsights', action: `${ns}.Action.openAIInsights()`, titleKey: 'layout.formula.ai.dataInsightsTitle' },
+                            ]
+                        }
+                    ]
                 }
             ]
         },
@@ -466,6 +489,28 @@ export function createToolbarConfig(ns) {
                         { type: 'large', icon: 'xianshibili', labelKey: 'layout.auto.label89be961f', hasArrow: true, menu: 'zoom' },
                         { type: 'large', icon: 'yby', labelKey: 'layout.auto.label2f97df3c', action: `${ns}.activeSheet.zoom=1` },
                         { type: 'large', icon: 'suofang', labelKey: 'layout.auto.label8b57557b', action: `${ns}.activeSheet.zoomToSelection()` }
+                    ]
+                },
+                {
+                    items: [
+                        {
+                            type: 'large',
+                            icon: 'tracking',
+                            labelKey: 'layout.auto.tracking',
+                            id: 'trackingBtn',
+                            action: `${ns}.Tracking.toggleTracking();${ns}.Layout.updateTrackingButton()`,
+                            titleKey: 'layout.auto.trackingTitle',
+                            active: ctx => ctx.Tracking?.isTracking
+                        },
+                        {
+                            type: 'large',
+                            icon: 'audio_record',
+                            labelKey: 'layout.auto.audioRecord',
+                            id: 'audioRecordBtn',
+                            action: `${ns}.AudioRecorder.toggleRecording()`,
+                            titleKey: 'layout.auto.audioRecordTitle',
+                            active: ctx => ctx.AudioRecorder?.isRecording
+                        }
                     ]
                 },
                 {

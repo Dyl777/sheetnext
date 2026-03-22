@@ -17,6 +17,7 @@
   <img src="https://img.shields.io/badge/rendering-Canvas-ff8c00.svg" alt="Canvas rendering" />
   <img src="https://img.shields.io/badge/workflow-AI%20Ready-00A67E.svg" alt="AI ready" />
   <img src="https://img.shields.io/badge/file%20support-XLSX%20%7C%20CSV%20%7C%20JSON-1f6feb.svg" alt="file support" />
+  <img src="https://img.shields.io/badge/ai%20integration-llama--server-FF6B35.svg" alt="AI integration" />
 </p>
 
 <p align="center">
@@ -26,14 +27,23 @@
 - SheetNext is a pure front-end, high-performance spreadsheet engine that provides enterprises with a ready-to-use intelligent spreadsheet foundation.
 - With the AI-driven development approach, a single developer + AI can integrate and deliver complex enterprise spreadsheet solutions.
 - Common scenarios like ledgers, budgets, analytics, data entry, and approvals can produce a first version in minutes.
+- **🔥 NEW: 100% Full AI Integration** - Complete llama-server integration with streaming, tool calling, and local model support!
+- **🆕 NEW: Multi-Conversation Support** - Manage multiple parallel AI conversations with isolated contexts!
+- **📚 NEW: PageIndex RAG System** - Document Q&A with semantic search and retrieval-augmented generation!
 
 ## ✨ Key Features
 
 - 📊 Full Spreadsheet Capabilities — Formula engine, charts, pivot tables, super tables, slicers, conditional formatting, data validation, sparklines, freeze panes, sorting & filtering, and more
-- 🤖 AI-Powered Workflow — Built-in AI automation for template generation, data analysis, formula writing, and cross-sheet logic
+- 🤖 **AI-Powered Workflow** — Built-in AI automation for template generation, data analysis, formula writing, and cross-sheet logic
+- 🔌 **llama-server Integration** — Direct connection to llama.cpp, vLLM, Ollama, sglang, and other OpenAI-compatible endpoints
+- 🌊 **Streaming Responses** — Real-time token streaming for faster, more interactive AI conversations
+- 🛠️ **AI Tool Calling** — AI can directly manipulate cells, formulas, formatting, charts, and pivot tables
+- 💬 **Multi-Conversation Support** — Manage multiple parallel conversations with isolated contexts and custom system prompts
+- 📚 **PageIndex RAG System** — Document Q&A with semantic search, chunking, and retrieval-augmented generation
 - 📁 Native File Support — Import/export Excel (.xlsx), CSV, and JSON out of the box, no extra plugins needed
 - 🚀 Zero-Config Setup — All features built in, no additional dependencies required
 - ⚡ High-Performance Rendering — Canvas-based virtual scrolling handles large datasets with ease
+- 🔒 Privacy-First AI — Run models locally, keep your data completely private
 
 ## 🚀 Quick Start
 
@@ -143,19 +153,144 @@ For example:
 - "Build a multi-sheet budget entry system with permissions and printing"
 - "Migrate an existing Excel template to an online editable version"
 
-### Integrating Local AI Models (Ollama, vLLM, sglang, llama.cpp)
+### 🤖 AI Integration (100% Full Integration)
 
-SheetNext's built-in AI Chat interface can natively connect to your own local inference engines, keeping your data entirely private! 
+SheetNext now includes **complete AI integration** with llama-server and other OpenAI-compatible inference engines. This enables:
 
-To wire up the Chat UI to any OpenAI-compatible drop-in replacement:
-1. Ensure your local server is running (e.g., `vllm serve`, `ollama serve`, `sglang`, or `llama-server` from llama.cpp).
-2. Open `src/core/AI/AI.js` and update the connection details in the constructor so it matches your local runner's setup:
-    ```javascript
-    this.apiUrl = "http://localhost:8000/v1/chat/completions"; // Usually matches vLLM/sglang defaults
-    this.modelName = "local-model"; // Set your specific model namespace if using Ollama
-    this.apiKey = "sk-no-key";
-    ```
-3. Spin up the dev environment with `npm run dev` (or rebuild via `npm run build`) and click the Robot icon next to your formula bar to start interacting with your local model!
+- ✅ **Streaming responses** for real-time feedback
+- ✅ **Tool calling** for direct spreadsheet manipulation
+- ✅ **Context awareness** for smarter responses
+- ✅ **Local model support** for complete privacy
+- ✅ **Multiple endpoints** (llama-server, vLLM, Ollama, sglang)
+
+#### Quick Start with llama-server
+
+**1. Start llama-server:**
+
+```bash
+# Download llama.cpp and start the server
+./llama-server -m your-model.gguf -c 4096 --port 8080
+```
+
+**2. Configure SheetNext:**
+
+```javascript
+import SheetNext from 'sheetnext';
+
+const SN = new SheetNext(document.querySelector('#SNContainer'), {
+  locale: 'en-US',
+  
+  // AI Configuration
+  AI_URL: 'http://localhost:8080/v1/chat/completions',
+  AI_MODEL: 'llama',
+  AI_TOKEN: 'sk-no-key',
+  AI_STREAM: true,        // Enable streaming
+  AI_TOOLS: true          // Enable tool calling
+});
+```
+
+**3. Use AI Features:**
+
+- Click the 🤖 button to open the AI chat panel
+- Use AI toolbar buttons in the Formula tab
+- Try example prompts or ask your own questions
+
+#### Supported Inference Engines
+
+| Engine | Default URL | Example Configuration |
+|--------|-------------|----------------------|
+| **llama-server** | `http://localhost:8080` | `AI_URL: 'http://localhost:8080/v1/chat/completions'` |
+| **vLLM** | `http://localhost:8000` | `AI_URL: 'http://localhost:8000/v1/chat/completions'` |
+| **Ollama** | `http://localhost:11434` | `AI_URL: 'http://localhost:11434/v1/chat/completions'` |
+| **sglang** | `http://localhost:30000` | `AI_URL: 'http://localhost:30000/v1/chat/completions'` |
+
+#### AI Configuration Options
+
+```javascript
+const SN = new SheetNext(dom, {
+  // Basic settings
+  AI_URL: 'http://localhost:8080/v1/chat/completions',
+  AI_MODEL: 'llama',
+  AI_TOKEN: 'sk-no-key',
+  
+  // Advanced settings
+  AI_MAX_TOKENS: 4096,      // Maximum response length
+  AI_TEMPERATURE: 0.7,      // Creativity (0-1)
+  AI_TOP_P: 0.9,            // Top-p sampling
+  AI_STREAM: true,          // Enable streaming
+  AI_TOOLS: true,           // Enable tool calling
+  AI_CONTEXT_LENGTH: 8,     // Context window size
+  
+  // Multi-conversation
+  AI_MAX_CONVERSATIONS: 10, // Maximum conversations to keep
+  
+  // RAG (Document Q&A)
+  AI_RAG_ENABLED: true,     // Enable RAG by default
+  RAG_CHUNK_SIZE: 512,      // Document chunk size
+  RAG_CHUNK_OVERLAP: 50,    // Chunk overlap
+  RAG_TOP_K: 3,             // Default search results
+  RAG_SIMILARITY_THRESHOLD: 0.7, // Similarity threshold
+  
+  // Callbacks
+  AI_ON_CHUNK: (chunk, content) => console.log('Chunk:', chunk),
+  AI_ON_COMPLETE: (response, messages) => console.log('Complete:', response),
+  AI_ON_ERROR: (error) => console.error('Error:', error)
+});
+```
+
+#### Multi-Conversation Support
+
+```javascript
+// Create a new conversation
+const conv = SN.AI.createConversation('Formula Help', {
+  systemPrompt: 'You are an Excel formula expert.'
+});
+
+// Switch conversations
+SN.AI.switchConversation(conv.id);
+
+// Get all conversations
+const all = SN.AI.getAllConversations();
+
+// Delete a conversation
+SN.AI.deleteConversation(conv.id);
+
+// Export conversation
+const exported = SN.AI.exportConversation('markdown');
+```
+
+#### PageIndex RAG System
+
+```javascript
+// Add document to index
+SN.AI.addDocumentPage(0, 'Document content here...', {
+  title: 'User Manual',
+  category: 'documentation'
+});
+
+// Search documents
+const results = await SN.AI.searchDocuments('How to create formulas?');
+
+// RAG is automatically used in conversations when enabled
+await SN.AI.conversation('What does the documentation say about formulas?');
+// AI will retrieve relevant document context automatically
+```
+
+#### AI-Powered Features
+
+1. **Formula Generation**: `await SN.AI.generateFormula('Sum of B2:B20 with 10% tax')`
+2. **Data Analysis**: `await SN.AI.analyzeData('A1:D100')`
+3. **Template Creation**: `await SN.AI.generateTemplate('budget')`
+4. **Auto Formatting**: Ask AI to format data professionally
+5. **Data Insights**: Get actionable insights from your data
+6. **Chart Creation**: Generate charts from selected data
+7. **Conditional Formatting**: Create smart formatting rules
+8. **Multi-Conversation**: Manage parallel AI conversations
+9. **Document Q&A (RAG)**: Ask questions about indexed documents
+
+For complete documentation, see:
+- [AI_INTEGRATION_GUIDE.md](./AI_INTEGRATION_GUIDE.md) - Full AI integration guide
+- [MULTI_CONVERSATION_AND_RAG_GUIDE.md](./MULTI_CONVERSATION_AND_RAG_GUIDE.md) - Multi-conversation & RAG guide
 
 ## 🎯 Use Cases
 

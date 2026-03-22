@@ -166,6 +166,16 @@
 
 .sn-tools-stack-item .sn-svg {
     text-align: center;
+    font-size: 16px;
+}
+
+/* AI Icons - ensure proper sizing */
+.sn-tools-item .sn-svg[data-icon="ai_generate"],
+.sn-tools-item .sn-svg[data-icon="ai_analyze"],
+.sn-tools-item .sn-svg[data-icon="ai_template"],
+.sn-tools-item .sn-svg[data-icon="ai_format"],
+.sn-tools-item .sn-svg[data-icon="ai_insights"] {
+    font-size: 18px;
 }
 
 .sn-tools-stack-item .sn-dropdown-toggle {
@@ -189,6 +199,57 @@
     display: flex;
     align-items: center;
     gap: 3px;
+}
+
+.sn-tools-row .sn-svg {
+    font-size: 16px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Recording timer */
+.sn-recording-timer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: #ff4444;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    display: none;
+    z-index: 10000;
+    animation: pulse 1s infinite;
+}
+
+.sn-recording-timer.active {
+    display: block;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Tracking button active state */
+.sn-tools-item[data-icon="tracking_active"] {
+    background: #ff4444;
+}
+
+.sn-tools-item[data-icon="tracking_active"] .sn-svg {
+    color: white;
+}
+
+/* Audio recording button active state */
+.sn-tools-item[data-icon="audio_recording"] {
+    background: #ff4444;
+    animation: recordPulse 1s infinite;
+}
+
+@keyframes recordPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
 /* ==================== 下拉框 ==================== */

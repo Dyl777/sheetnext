@@ -17,6 +17,8 @@ import { parsePivotTables, parseSlicerCaches } from "../OpenEdition/PivotSlicerS
 import I18n from "../I18n/I18n.js"
 import { registerLocale, getLocalePack, getAllLocalePacks } from "../../locales/registry.js"
 import Enum from "../../enum/index.js"
+import UserTracking from "../Tracking/UserTracking.js"
+import AudioRecorder from "../Tracking/AudioRecorder.js"
 import "../../style/base.css"
 import "../../style/editor.css"
 import "../../style/tools.css"
@@ -57,8 +59,18 @@ class SheetNext {
      * @param {Object<string, Object>} [options.locales] - Extra locale packs keyed by locale code.
      * @param {function} [options.menuRight] - Callback `(defaultHTML: string) => string`. Receives the default right-menu HTML, return modified HTML.
      * @param {function} [options.menuList] - Callback `(config: Array<{key: string, labelKey: string, groups: Array, contextual?: boolean}>) => Array`. Receives the default toolbar panel config array, return modified array.
-     * @param {string} [options.AI_URL] - AI relay endpoint URL.
+     * @param {string} [options.AI_URL] - AI relay endpoint URL (e.g., 'http://localhost:8080/v1/chat/completions' for llama-server).
      * @param {string} [options.AI_TOKEN] - Optional bearer token for AI relay endpoint.
+     * @param {string} [options.AI_MODEL='llama'] - Model name to use for AI completions.
+     * @param {number} [options.AI_MAX_TOKENS=4096] - Maximum tokens for AI response.
+     * @param {number} [options.AI_TEMPERATURE=0.7] - Temperature for AI (0-1, higher = more creative).
+     * @param {number} [options.AI_TOP_P=0.9] - Top-p sampling for AI.
+     * @param {boolean} [options.AI_STREAM=true] - Enable streaming responses.
+     * @param {boolean} [options.AI_TOOLS=true] - Enable AI tool calling for spreadsheet operations.
+     * @param {number} [options.AI_CONTEXT_LENGTH=8] - Number of context items to include.
+     * @param {function} [options.AI_ON_CHUNK] - Callback for streaming chunks.
+     * @param {function} [options.AI_ON_COMPLETE] - Callback when AI response completes.
+     * @param {function} [options.AI_ON_ERROR] - Callback when AI request fails.
      */
     constructor(dom, options = {}) {
         SheetNext._consumePendingLocales();
@@ -91,6 +103,16 @@ class SheetNext {
         this.DependencyGraph = new DependencyGraph(this)
         this.UndoRedo = new UndoRedo(this)
         this.Canvas = new Canvas(this, this.#license)
+        
+        // Tracking and Audio Recording
+        this.Tracking = new UserTracking(this, {
+            BACKEND_URL: options.BACKEND_URL,
+            AI_TOKEN: options.AI_TOKEN
+        })
+        this.AudioRecorder = new AudioRecorder(this, {
+            BACKEND_URL: options.BACKEND_URL,
+            AI_TOKEN: options.AI_TOKEN
+        })
 
         this._readOnly = false
         this._activeSheet = null

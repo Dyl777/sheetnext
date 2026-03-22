@@ -20,6 +20,7 @@ import * as TableActions from './Table.js';
 import * as ViewActions from './View.js';
 import * as PrintActions from './Print.js';
 import * as ProtectionActions from './Protection.js';
+import * as AIActions from './AI.js';
 
 export default class Fun {
 
@@ -279,4 +280,19 @@ Object.assign(Fun.prototype, {
     configCellProtection: ProtectionActions.configCellProtection,
     setPermission: ProtectionActions.setPermission,
     resetPermissions: ProtectionActions.resetPermissions
+});
+
+// AI 模块方法
+Object.assign(Fun.prototype, {
+    openAIGenerateFormula: AIActions.openAIGenerateFormula,
+    openAIAnalyzeData: AIActions.openAIAnalyzeData,
+    openAIGenerateTemplate: AIActions.openAIGenerateTemplate,
+    openAIAutoFormat: AIActions.openAIAutoFormat,
+    openAIInsights: AIActions.openAIInsights,
+    openAIConfig: AIActions.openAIConfig,
+    saveAIConfig: AIActions.saveAIConfig,
+    cancelAIConfig: AIActions.cancelAIConfig,
+    resetAIConfig: AIActions.resetAIConfig,
+    quickAICommand: AIActions.quickAICommand,
+    generateFormulaWithAI: AIActions.generateFormulaWithAI
 });
