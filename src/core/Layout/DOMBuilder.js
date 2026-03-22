@@ -47,7 +47,17 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                         <div class="sn-chat-input">
                             <div class="sn-chat-head d-flex justify-content-between align-items-center">
                                 ${getSvg('ai_insights')} ${t('ai.panel.title', 'SheetNext AI')}
-                                <span onclick="${ns}.Layout.showAIChatWindow=!${ns}.Layout.showAIChatWindow" class="sn-svg-btn">${getSvg('xiaochuangbofang')}</span>
+                                <div class="sn-chat-head-actions">
+                                    <button class="sn-chat-head-btn" onclick="${ns}.Layout.toggleCharacteristicsPanel()" title="${t('ai.characteristics.title', 'AI Characteristics')}">
+                                        ${getSvg('characteristics')}
+                                    </button>
+                                    <span onclick="${ns}.Layout.showAIChatWindow=!${ns}.Layout.showAIChatWindow" class="sn-svg-btn">${getSvg('xiaochuangbofang')}</span>
+                                </div>
+                            </div>
+                            <div class="sn-characteristic-selector" onclick="${ns}.Layout.showCharacteristicSelector()">
+                                <span class="sn-characteristic-icon">${getSvg('assistant')}</span>
+                                <span class="sn-characteristic-name" id="snActiveCharacteristicName">${t('ai.characteristics.default', 'Helpful Assistant')}</span>
+                                ${getSvg('arrow-down')}
                             </div>
                             <div class="upImgList"></div>
                             <textarea autocomplete="off" class="sn-prompt-input" rows="3" placeholder="${t('ai.panel.inputPlaceholder', 'Describe what to do with the sheet...')}"></textarea>
@@ -82,6 +92,74 @@ export function createMainHTML(ns, menuRightHTML, SN = null, menuListCallback = 
                                     <li onclick="${ns}.AI.chatInput(this.innerText);">${t('ai.panel.examples.item6')}</li>
                                     <li onclick="${ns}.AI.chatInput(this.innerText);">${t('ai.panel.examples.item7')}</li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Characteristics Panel -->
+                    <div class="sn-characteristics-panel" id="snCharacteristicsPanel">
+                        <div class="sn-characteristics-header">
+                            <h3>${t('ai.characteristics.title', 'AI Characteristics')}</h3>
+                            <button class="sn-panel-close" onclick="${ns}.Layout.toggleCharacteristicsPanel()">${getSvg('cuowu')}</button>
+                        </div>
+                        <div class="sn-characteristics-list" id="snCharacteristicsList">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div class="sn-characteristics-footer">
+                            <button class="sn-btn sn-btn-primary" onclick="${ns}.Action.openCreateCharacteristic()" style="width:100%">
+                                ${getSvg('plus')} ${t('ai.characteristics.create', 'Create New')}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Characteristic Selector Dropdown -->
+                    <div class="sn-characteristic-dropdown" id="snCharacteristicDropdown" style="display:none">
+                        <div class="sn-characteristic-dropdown-header">${t('ai.characteristics.select', 'Select AI Persona')}</div>
+                        <div class="sn-characteristic-dropdown-list" id="snCharacteristicDropdownList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cache Management Panel -->
+                    <div class="sn-cache-panel" id="snCachePanel">
+                        <div class="sn-cache-header">
+                            <h3>Cache Management</h3>
+                            <button class="sn-panel-close" onclick="${ns}.Layout.toggleCachePanel()">${getSvg('cuowu')}</button>
+                        </div>
+                        <div class="sn-cache-content">
+                            <div class="sn-cache-stats">
+                                <div class="sn-cache-stat">
+                                    <span class="sn-cache-stat-label">Total Size</span>
+                                    <span class="sn-cache-stat-value" id="cacheTotalSize">0</span>
+                                </div>
+                                <div class="sn-cache-stat">
+                                    <span class="sn-cache-stat-label">Hit Rate</span>
+                                    <span class="sn-cache-stat-value" id="cacheHitRate">0%</span>
+                                </div>
+                            </div>
+                            <div class="sn-cache-section">
+                                <h4>Cache Types</h4>
+                                <div class="sn-cache-type-item">
+                                    <span>AI Responses</span>
+                                    <span id="cacheAISize">0</span>
+                                </div>
+                                <div class="sn-cache-type-item">
+                                    <span>Documents</span>
+                                    <span id="cacheDocumentsSize">0</span>
+                                </div>
+                                <div class="sn-cache-type-item">
+                                    <span>API</span>
+                                    <span id="cacheAPISize">0</span>
+                                </div>
+                                <div class="sn-cache-type-item">
+                                    <span>General</span>
+                                    <span id="cacheGeneralSize">0</span>
+                                </div>
+                            </div>
+                            <div class="sn-cache-actions">
+                                <button class="sn-btn" onclick="${ns}.Action.refreshCacheStats()">${getSvg('shuaxin')} Refresh</button>
+                                <button class="sn-btn sn-btn-danger" onclick="${ns}.Action.clearCache('ai')">${getSvg('clear')} Clear AI Cache</button>
+                                <button class="sn-btn sn-btn-danger" onclick="${ns}.Action.clearCache()">${getSvg('clear')} Clear All</button>
                             </div>
                         </div>
                     </div>

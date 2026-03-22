@@ -745,6 +745,10 @@ export default class AI {
         this.streamEnabled = options.AI_STREAM !== false;
         this.toolsEnabled = options.AI_TOOLS !== false;
         
+        // Caching
+        this.cacheEnabled = options.AI_CACHE_ENABLED !== false;
+        this.cacheTTL = options.AI_CACHE_TTL || 86400000; // 24 hours default
+        
         // Backend Configuration
         this.backendUrl = options.BACKEND_URL || null;
         

@@ -851,6 +851,136 @@ export default class Layout {
         }
     }
 
+    /**
+     * Toggle characteristics panel
+     */
+    toggleCharacteristicsPanel() {
+        const panel = this.SN.containerDom.querySelector('#snCharacteristicsPanel');
+        if (panel) {
+            panel.classList.toggle('active');
+            this.renderCharacteristicsList();
+        }
+    }
+
+    /**
+     * Show characteristic selector dropdown
+     */
+    showCharacteristicSelector() {
+        const dropdown = this.SN.containerDom.querySelector('#snCharacteristicDropdown');
+        if (dropdown) {
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            this.renderCharacteristicDropdown();
+        }
+    }
+
+    /**
+     * Render characteristics list in panel
+     */
+    renderCharacteristicsList() {
+        const list = this.SN.containerDom.querySelector('#snCharacteristicsList');
+        if (!list) return;
+        
+        const characteristics = this.SN.AICharacteristics.getAllCharacteristics();
+        const activeId = this.SN.AICharacteristics.activeCharacteristicId;
+        const ns = this.SN.namespace;
+        
+        list.innerHTML = characteristics.map(c => `
+            <div class="sn-characteristic-item ${c.id === activeId ? 'active' : ''}" 
+                 style="border-left: 3px solid ${c.color}"
+                 onclick="${ns}.Action.selectCharacteristic('${c.id}')">
+                <div class="sn-characteristic-item-header">
+                    <span class="sn-characteristic-item-icon" style="color: ${c.color}">
+                        ${this.SN.Utils.getSvg(c.icon || 'assistant')}
+                    </span>
+                    <div class="sn-characteristic-item-info">
+                        <div class="sn-characteristic-item-name">${c.name}</div>
+                        <div class="sn-characteristic-item-desc">${c.description}</div>
+                    </div>
+                    <div class="sn-characteristic-item-actions">
+                        ${!c.isDefault ? `
+                            <button class="sn-char-action-btn" onclick="${ns}.Action.editCharacteristic('${c.id}')" title="Edit">
+                                ${this.SN.Utils.getSvg('shezhi')}
+                            </button>
+                            <button class="sn-char-action-btn" onclick="${ns}.Action.deleteCharacteristic('${c.id}')" title="Delete">
+                                ${this.SN.Utils.getSvg('cuowu')}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Render characteristic selector dropdown
+     */
+    renderCharacteristicDropdown() {
+        const list = this.SN.containerDom.querySelector('#snCharacteristicDropdownList');
+        if (!list) return;
+        
+        const characteristics = this.SN.AICharacteristics.getAllCharacteristics();
+        const activeId = this.SN.AICharacteristics.activeCharacteristicId;
+        const ns = this.SN.namespace;
+        
+        list.innerHTML = characteristics.map(c => `
+            <div class="sn-characteristic-dropdown-item ${c.id === activeId ? 'active' : ''}"
+                 onclick="${ns}.Action.selectCharacteristic('${c.id}');${ns}.Layout.showCharacteristicSelector()">
+                <span style="color: ${c.color}">${this.SN.Utils.getSvg(c.icon || 'assistant')}</span>
+                <span>${c.name}</span>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Update active characteristic display
+     */
+    updateActiveCharacteristicDisplay() {
+        const characteristic = this.SN.AICharacteristics.getActiveCharacteristic();
+        if (!characteristic) return;
+        
+        const nameEl = this.SN.containerDom.querySelector('#snActiveCharacteristicName');
+        const iconEl = this.SN.containerDom.querySelector('.sn-characteristic-icon');
+        
+        if (nameEl) {
+            nameEl.textContent = characteristic.name;
+        }
+        if (iconEl) {
+            iconEl.innerHTML = this.SN.Utils.getSvg(characteristic.icon || 'assistant');
+        }
+    }
+
+    /**
+     * Toggle cache panel
+     */
+    toggleCachePanel() {
+        const panel = this.SN.containerDom.querySelector('#snCachePanel');
+        if (panel) {
+            panel.classList.toggle('active');
+            this.refreshCacheStats();
+        }
+    }
+
+    /**
+     * Refresh cache statistics
+     */
+    refreshCacheStats() {
+        const stats = this.SN.Cache.getStats();
+        
+        const totalEl = this.SN.containerDom.querySelector('#cacheTotalSize');
+        const hitRateEl = this.SN.containerDom.querySelector('#cacheHitRate');
+        const aiEl = this.SN.containerDom.querySelector('#cacheAISize');
+        const docsEl = this.SN.containerDom.querySelector('#cacheDocumentsSize');
+        const apiEl = this.SN.containerDom.querySelector('#cacheAPISize');
+        const genEl = this.SN.containerDom.querySelector('#cacheGeneralSize');
+        
+        if (totalEl) totalEl.textContent = stats.totalSize;
+        if (hitRateEl) hitRateEl.textContent = stats.hitRate;
+        if (aiEl) aiEl.textContent = stats.caches.ai;
+        if (docsEl) docsEl.textContent = stats.caches.documents;
+        if (apiEl) apiEl.textContent = stats.caches.api;
+        if (genEl) genEl.textContent = stats.caches.general;
+    }
+
     _bindPivotPanelEvents(pt) {
         const panel = this.snPivotPanel;
         const SN = this.SN;

@@ -1025,6 +1025,34 @@ const enUS = {
             "audioSaved": "Audio saved successfully"
         }
     },
+    "ai": {
+        "characteristics": {
+            "title": "AI Characteristics",
+            "default": "Helpful Assistant",
+            "create": "Create New",
+            "edit": "Edit",
+            "delete": "Delete",
+            "select": "Select AI Persona",
+            "active": "Active",
+            "name": "Name",
+            "description": "Description",
+            "systemPrompt": "System Prompt",
+            "temperature": "Temperature",
+            "color": "Color",
+            "save": "Save",
+            "cancel": "Cancel",
+            "confirmDelete": "Are you sure you want to delete this characteristic?",
+            "cannotDeleteDefault": "Cannot delete default characteristics",
+            "created": "Characteristic created",
+            "updated": "Characteristic updated",
+            "deleted": "Characteristic deleted",
+            "switched": "Switched to",
+            "import": "Import",
+            "export": "Export",
+            "reset": "Reset to Defaults",
+            "confirmReset": "Reset all characteristics to defaults? This will delete all custom characteristics."
+        }
+    },
     "autoFilter": {
         "panel": {
             "clear": "Clear",

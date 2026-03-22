@@ -8,6 +8,8 @@ import Layout from "../Layout/Layout.js"
 import Action from "../../action/Action.js"
 import Print from "../Print/Print.js"
 import AI from "../AI/AI.js"
+import AICharacteristics from "../AI/AICharacteristics.js"
+import CacheManager from "../Cache/CacheManager.js"
 import License from "../License/License.js"
 import DependencyGraph from "../Formula/DependencyGraph.js"
 import IO from "../IO/IO.js"
@@ -97,6 +99,16 @@ class SheetNext {
         this.Action = new Action(this)
         this.Layout = new Layout(this, options)
         this.AI = new AI(this, options, this.#license)
+        this.AICharacteristics = new AICharacteristics(this, {
+            BACKEND_URL: options.BACKEND_URL,
+            AI_TOKEN: options.AI_TOKEN
+        })
+        this.Cache = new CacheManager({
+            maxSize: options.CACHE_MAX_SIZE || 1000,
+            defaultTTL: options.CACHE_DEFAULT_TTL || 3600000,
+            enablePersistence: options.CACHE_ENABLE_PERSISTENCE !== false,
+            dbName: 'SheetNextCache'
+        })
         this.Xml = new Xml(this)
         this.IO = new IO(this, this.#license)
         this.Formula = new Formula(this)

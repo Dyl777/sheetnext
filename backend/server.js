@@ -15,6 +15,9 @@ import ragRoutes from './routes/rag.js';
 import groqRoutes from './routes/groq.js';
 import trackingRoutes from './routes/tracking.js';
 import audioRoutes from './routes/audio.js';
+import characteristicsRoutes from './routes/characteristics.js';
+import cacheRoutes from './routes/cache.js';
+import advancedCacheRoutes from './routes/cache-advanced.js';
 
 dotenv.config();
 
@@ -89,6 +92,9 @@ app.use('/api/rag', ragRoutes);
 app.use('/api/groq', groqRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/audio', audioRoutes);
+app.use('/api/characteristics', characteristicsRoutes);
+app.use('/api/cache', cacheRoutes);
+app.use('/api/cache/advanced', advancedCacheRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

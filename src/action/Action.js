@@ -294,5 +294,17 @@ Object.assign(Fun.prototype, {
     cancelAIConfig: AIActions.cancelAIConfig,
     resetAIConfig: AIActions.resetAIConfig,
     quickAICommand: AIActions.quickAICommand,
-    generateFormulaWithAI: AIActions.generateFormulaWithAI
+    generateFormulaWithAI: AIActions.generateFormulaWithAI,
+    // Characteristics methods
+    selectCharacteristic: AIActions.selectCharacteristic,
+    openCreateCharacteristic: AIActions.openCreateCharacteristic,
+    saveCharacteristic: AIActions.saveCharacteristic,
+    cancelCharacteristic: AIActions.cancelCharacteristic,
+    editCharacteristic: AIActions.editCharacteristic,
+    updateCharacteristic: AIActions.updateCharacteristic,
+    deleteCharacteristic: AIActions.deleteCharacteristic,
+    resetCharacteristics: AIActions.resetCharacteristics,
+    exportCharacteristics: AIActions.exportCharacteristics,
+    importCharacteristics: AIActions.importCharacteristics,
+    confirmImportCharacteristic: AIActions.confirmImportCharacteristic
 });
