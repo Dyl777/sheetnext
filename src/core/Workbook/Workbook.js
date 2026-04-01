@@ -21,6 +21,8 @@ import { registerLocale, getLocalePack, getAllLocalePacks } from "../../locales/
 import Enum from "../../enum/index.js"
 import UserTracking from "../Tracking/UserTracking.js"
 import AudioRecorder from "../Tracking/AudioRecorder.js"
+import ActionRecorder from "../Recording/ActionRecorder.js"
+import ActionScheduler from "../Recording/ActionScheduler.js"
 import "../../style/base.css"
 import "../../style/editor.css"
 import "../../style/tools.css"
@@ -122,6 +124,20 @@ class SheetNext {
             AI_TOKEN: options.AI_TOKEN
         })
         this.AudioRecorder = new AudioRecorder(this, {
+            BACKEND_URL: options.BACKEND_URL,
+            AI_TOKEN: options.AI_TOKEN
+        })
+        
+        // Action Recording and Automation
+        this.ActionRecorder = new ActionRecorder(this, {
+            BACKEND_URL: options.BACKEND_URL,
+            AI_TOKEN: options.AI_TOKEN,
+            captureScreenshots: options.ACTION_CAPTURE_SCREENSHOTS !== false,
+            captureAudio: options.ACTION_CAPTURE_AUDIO !== false,
+            captureMouse: options.ACTION_CAPTURE_MOUSE !== false,
+            captureKeyboard: options.ACTION_CAPTURE_KEYBOARD !== false
+        })
+        this.ActionScheduler = new ActionScheduler(this, {
             BACKEND_URL: options.BACKEND_URL,
             AI_TOKEN: options.AI_TOKEN
         })

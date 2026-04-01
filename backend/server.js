@@ -18,6 +18,7 @@ import audioRoutes from './routes/audio.js';
 import characteristicsRoutes from './routes/characteristics.js';
 import cacheRoutes from './routes/cache.js';
 import advancedCacheRoutes from './routes/cache-advanced.js';
+import actionRoutes from './routes/actions.js';
 
 dotenv.config();
 
@@ -95,6 +96,7 @@ app.use('/api/audio', audioRoutes);
 app.use('/api/characteristics', characteristicsRoutes);
 app.use('/api/cache', cacheRoutes);
 app.use('/api/cache/advanced', advancedCacheRoutes);
+app.use('/api/actions', actionRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
