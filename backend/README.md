@@ -165,7 +165,7 @@ curl -X POST http://localhost:3000/api/groq/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "model": "llama-3.2-90b-vision-preview",
+    "model": "moonshotai/kimi-k2-instruct",
     "messages": [{"role": "user", "content": "Hello!"}],
     "max_tokens": 1024
   }'
@@ -221,7 +221,7 @@ curl -X POST http://localhost:3000/api/groq/chat/completions \
 | `JWT_SECRET` | JWT signing secret | - |
 | `JWT_EXPIRES_IN` | Token expiration | `7d` |
 | `GROQ_API_KEY` | Groq API key | - |
-| `GROQ_MODEL` | Default Groq model | `llama-3.2-90b-vision-preview` |
+| `GROQ_MODEL` | Default Groq model | `moonshotai/kimi-k2-instruct` |
 | `LLAMA_SERVER_URL` | llama-server URL | `http://localhost:8080/v1/chat/completions` |
 | `MAX_FILE_SIZE` | Max upload size | `10485760` (10MB) |
 | `UPLOAD_DIR` | Upload directory | `./uploads` |

@@ -5,10 +5,37 @@ import { userModel } from '../models/User.js';
 
 const router = express.Router();
 
+/** Groq/OpenAI chat messages: drop extra fields (e.g. timestamp) the API rejects. */
+function sanitizeChatMessages(messages) {
+  if (!Array.isArray(messages)) return [];
+  return messages
+    .map((msg) => {
+      if (!msg || typeof msg !== 'object') {
+        return { role: 'user', content: String(msg ?? '') };
+      }
+      const out = { role: msg.role };
+      if (Object.prototype.hasOwnProperty.call(msg, 'content')) {
+        out.content = msg.content;
+      }
+      if (msg.name != null && msg.name !== '') {
+        out.name = msg.name;
+      }
+      if (msg.tool_calls != null) {
+        out.tool_calls = msg.tool_calls;
+      }
+      if (msg.tool_call_id != null) {
+        out.tool_call_id = msg.tool_call_id;
+      }
+      return out;
+    })
+    .filter((m) => m && m.role);
+}
+
 // Chat completion endpoint
 router.post('/chat/completions', authMiddleware, async (req, res) => {
   try {
-    const { messages, model = 'llama-3.2-90b-vision-preview', max_tokens = 4096, stream = false } = req.body;
+    const { messages: rawMessages, model = 'moonshotai/kimi-k2-instruct', max_tokens = 4096, stream = false } = req.body;
+    const messages = sanitizeChatMessages(rawMessages);
     
     // Get user's Groq API key or use environment variable
     const user = await userModel.findById(req.userId);
@@ -99,7 +126,7 @@ router.post('/vision/analyze', authMiddleware, async (req, res) => {
     const groq = new Groq({ apiKey });
     
     const response = await groq.chat.completions.create({
-      model: 'llama-3.2-90b-vision-preview',
+      model: 'moonshotai/kimi-k2-instruct',
       messages: [
         {
           role: 'user',
@@ -114,7 +141,7 @@ router.post('/vision/analyze', authMiddleware, async (req, res) => {
     
     res.json({
       analysis: response.choices[0].message.content,
-      model: 'llama-3.2-90b-vision-preview'
+      model: 'moonshotai/kimi-k2-instruct'
     });
   } catch (error) {
     console.error('Vision analysis error:', error);
@@ -157,7 +184,8 @@ router.get('/test-key', authMiddleware, async (req, res) => {
 // Fallback-enabled chat endpoint (tries Groq, falls back to llama-server)
 router.post('/chat/completions-with-fallback', authMiddleware, async (req, res) => {
   try {
-    const { messages, model, max_tokens = 4096, stream = false, preferProvider = 'groq' } = req.body;
+    const { messages: rawMessages, model, max_tokens = 4096, stream = false, preferProvider = 'groq' } = req.body;
+    const messages = sanitizeChatMessages(rawMessages);
     
     const user = await userModel.findById(req.userId);
     const groqApiKey = user?.groq_api_key || process.env.GROQ_API_KEY;
@@ -178,7 +206,7 @@ router.post('/chat/completions-with-fallback', authMiddleware, async (req, res) 
 
           const groq = new Groq({ apiKey: groqApiKey });
           const response = await groq.chat.completions.create({
-            model: model || 'llama-3.2-90b-vision-preview',
+            model: model || 'moonshotai/kimi-k2-instruct',
             messages,
             max_tokens,
             stream
@@ -213,7 +241,10 @@ router.post('/chat/completions-with-fallback', authMiddleware, async (req, res) 
           });
 
           if (!response.ok) {
-            throw new Error(`llama-server error: ${response.statusText}`);
+            const errBody = await response.text();
+            throw new Error(
+              `llama-server HTTP ${response.status}: ${response.statusText || 'error'}${errBody ? ` — ${errBody.slice(0, 200)}` : ''}`
+            );
           }
 
           if (stream) {

@@ -80,7 +80,7 @@ To use Groq API for image/document conversion:
 const SN = new SheetNext(dom, {
   GROQ_API_KEY: 'your_groq_api_key',
   USE_GROQ: true,
-  GROQ_MODEL: 'llama-3.2-90b-vision-preview'
+  GROQ_MODEL: 'moonshotai/kimi-k2-instruct'
 });
 ```
 

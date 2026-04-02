@@ -55,7 +55,7 @@ const SN = new SheetNext(dom, {
 // Configure after initialization
 SN.ActionRecorder.configureAutoNaming({
     enabled: true,
-    model: 'llama-3.2-90b-vision-preview',
+    model: 'moonshotai/kimi-k2-instruct',
     minActionsForNaming: 5,
     namingPrompt: `Analyze these user actions and generate a concise task name.
 The name should be 3-8 words and clearly describe the task.
@@ -304,13 +304,13 @@ Choose appropriate model for your needs:
 
 ```javascript
 // Fast, good for simple tasks
-ACTION_AUTO_NAMING_MODEL: 'llama-3.2-1b'
+ACTION_AUTO_NAMING_MODEL: 'kimi-k2-instruct'
 
 // Balanced speed/quality
-ACTION_AUTO_NAMING_MODEL: 'llama-3.2-3b'
+ACTION_AUTO_NAMING_MODEL: 'kimi-k2-instruct'
 
 // Best quality, slower
-ACTION_AUTO_NAMING_MODEL: 'llama-3.2-90b-vision-preview'
+ACTION_AUTO_NAMING_MODEL: 'moonshotai/kimi-k2-instruct'
 ```
 
 ### 3. Naming Cache
@@ -371,7 +371,7 @@ console.log('Action count:', stats.actionCount);
 ```javascript
 SN.ActionRecorder.configureAutoNaming({
     minActionsForNaming: 10,
-    model: 'llama-3.2-90b-vision-preview',
+    model: 'moonshotai/kimi-k2-instruct',
     namingPrompt: `Your improved prompt with more examples...`
 });
 ```

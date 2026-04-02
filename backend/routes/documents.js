@@ -171,7 +171,7 @@ async function convertImageWithGroq(filePath, apiKey) {
   const mimeType = path.extname(filePath).slice(1);
   
   const response = await groq.chat.completions.create({
-    model: 'llama-3.2-90b-vision-preview',
+    model: 'moonshotai/kimi-k2-instruct',
     messages: [
       {
         role: 'user',

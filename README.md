@@ -468,7 +468,7 @@ const SN = new SheetNext(document.querySelector('#SNContainer'), {
   
   // AI Configuration via backend proxy
   AI_URL: 'http://localhost:3000/api/groq/chat/completions',
-  AI_MODEL: 'llama-3.2-90b-vision-preview',
+  AI_MODEL: 'moonshotai/kimi-k2-instruct',
   AI_STREAM: true,
   AI_TOOLS: true,
   

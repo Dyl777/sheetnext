@@ -55,7 +55,7 @@
             </div>
             
             <!-- Register Tab -->
-            <div id="register-tab" class="auth-form" style="display: none;">
+            <div id="register-tab" class="auth-form">
                 <form id="register-form" onsubmit="handleRegister(event)">
                     <div class="form-group">
                         <label for="register-name">Name</label>
@@ -389,7 +389,7 @@
             
             // AI Configuration - Backend Proxy (No API Key in Frontend)
             AI_URL: 'http://localhost:3000/api/groq/chat/completions-with-fallback',
-            AI_MODEL: 'llama-3.2-90b-vision-preview',
+            AI_MODEL: 'moonshotai/kimi-k2-instruct',
             AI_STREAM: true,
             AI_TOOLS: true,
             
@@ -438,7 +438,9 @@
                 
                 if (data.token) {
                     localStorage.setItem('sheetnext_token', data.token);
-                    localStorage.setItem('sheetnext_user_id', data.userId);
+                    if (data.user && data.user.id) {
+                        localStorage.setItem('sheetnext_user_id', data.user.id);
+                    }
                     console.log('✓ Login successful');
                     
                     // Update SheetNext config with token
@@ -472,7 +474,9 @@
                 
                 if (data.token) {
                     localStorage.setItem('sheetnext_token', data.token);
-                    localStorage.setItem('sheetnext_user_id', data.userId);
+                    if (data.user && data.user.id) {
+                        localStorage.setItem('sheetnext_user_id', data.user.id);
+                    }
                     console.log('✓ Registration successful');
                     
                     // Update SheetNext config with token
@@ -484,8 +488,11 @@
                     
                     return { success: true, token: data.token };
                 } else {
-                    console.error('Registration failed:', data.error);
-                    return { success: false, error: data.error };
+                    console.error('Registration failed:', data.error, data.hint, data.details);
+                    const parts = [data.error].filter(Boolean);
+                    if (data.hint) parts.push(data.hint);
+                    if (data.details) parts.push(data.details);
+                    return { success: false, error: parts.join(' ') };
                 }
             } catch (error) {
                 console.error('Registration error:', error);

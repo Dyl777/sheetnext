@@ -3,8 +3,34 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { userModel } from '../models/User.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { getJwtSecret } from '../lib/jwtSecret.js';
 
 const router = express.Router();
+
+function registerErrorPayload(error) {
+  /** @type {{ hint?: string; details?: string }} */
+  const extra = {};
+  if (process.env.NODE_ENV === 'development') {
+    extra.details = error.message;
+  }
+  if (error.code === '42P01') {
+    extra.hint =
+      'Database tables are missing. From backend/, run: npm run db:schema (needs psql on PATH). If you see permission errors, run database/grant-public-to-app-user.sql as the postgres superuser first.';
+  } else if (error.code === '42501') {
+    extra.hint =
+      'Database user cannot create tables in schema public. As superuser: psql -U postgres -d YOUR_DB -f backend/database/grant-public-to-app-user.sql then npm run db:schema.';
+  } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+    extra.hint =
+      'Cannot reach PostgreSQL. Start the server and check DB_HOST, DB_PORT in backend/.env.';
+  } else if (error.code === '28P01') {
+    extra.hint =
+      'PostgreSQL rejected credentials. Check DB_USER and DB_PASSWORD in backend/.env.';
+  } else if (error.code === '3D000') {
+    extra.hint =
+      'Database does not exist. Create it (e.g. CREATE DATABASE sheetnext) or fix DB_NAME in .env.';
+  }
+  return extra;
+}
 
 // Register
 router.post('/register', async (req, res) => {
@@ -28,10 +54,9 @@ router.post('/register', async (req, res) => {
     // Create user
     const user = await userModel.create(email, passwordHash, name);
 
-    // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -47,7 +72,15 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    const { hint, details } = registerErrorPayload(error);
+    return res.status(500).json({
+      error: 'Failed to create user',
+      ...(hint && { hint }),
+      ...(details && { details }),
+    });
   }
 });
 
@@ -75,10 +108,9 @@ router.post('/login', async (req, res) => {
     // Update last login
     await userModel.updateLastLogin(user.id);
 
-    // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 

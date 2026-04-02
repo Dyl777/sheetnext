@@ -4,6 +4,35 @@
  */
 
 /**
+ * Chat Completions APIs (Groq, OpenAI, etc.) only accept a fixed set of fields per message.
+ * ConversationManager adds metadata like `timestamp`, which Groq rejects with 400.
+ */
+function sanitizeMessagesForChatApi(messages) {
+    if (!Array.isArray(messages)) return [];
+    return messages
+        .map((msg) => {
+            if (!msg || typeof msg !== 'object') {
+                return { role: 'user', content: String(msg ?? '') };
+            }
+            const out = { role: msg.role };
+            if (Object.prototype.hasOwnProperty.call(msg, 'content')) {
+                out.content = msg.content;
+            }
+            if (msg.name != null && msg.name !== '') {
+                out.name = msg.name;
+            }
+            if (msg.tool_calls != null) {
+                out.tool_calls = msg.tool_calls;
+            }
+            if (msg.tool_call_id != null) {
+                out.tool_call_id = msg.tool_call_id;
+            }
+            return out;
+        })
+        .filter((m) => m && m.role);
+}
+
+/**
  * File to Markdown Converter - Using llama-server or Groq
  */
 class FileToMarkdownConverter {
@@ -129,7 +158,7 @@ class FileToMarkdownConverter {
      */
     async _callVisionModel(messages) {
         if (this.useGroq && this.groqApiKey) {
-            return await this._callGroq(messages, 'llama-3.2-90b-vision-preview');
+            return await this._callGroq(messages, 'moonshotai/kimi-k2-instruct');
         }
         return await this._callLlamaServer(messages, true);
     }
@@ -147,7 +176,7 @@ class FileToMarkdownConverter {
     /**
      * Call Groq API
      */
-    async _callGroq(messages, model = 'llama-3.2-90b-vision-preview') {
+    async _callGroq(messages, model = 'moonshotai/kimi-k2-instruct') {
         const response = await fetch(this.groqUrl, {
             method: 'POST',
             headers: {
@@ -156,7 +185,7 @@ class FileToMarkdownConverter {
             },
             body: JSON.stringify({
                 model: model,
-                messages: messages,
+                messages: sanitizeMessagesForChatApi(messages),
                 max_tokens: 4096
             })
         });
@@ -181,7 +210,7 @@ class FileToMarkdownConverter {
             },
             body: JSON.stringify({
                 model: this.modelName,
-                messages: messages,
+                messages: sanitizeMessagesForChatApi(messages),
                 max_tokens: 4096
             })
         });
@@ -737,7 +766,7 @@ export default class AI {
         // Groq Configuration
         this.groqApiKey = options.GROQ_API_KEY || "";
         this.useGroq = options.USE_GROQ || false;
-        this.groqModel = options.GROQ_MODEL || "llama-3.2-90b-vision-preview";
+        this.groqModel = options.GROQ_MODEL || "moonshotai/kimi-k2-instruct";
         
         // Advanced configuration
         this.maxTokens = options.AI_MAX_TOKENS || 4096;
@@ -1252,8 +1281,8 @@ Always be concise, accurate, and helpful.`;
             };
             messages.splice(1, 0, contextMsg);
         }
-        
-        return messages;
+
+        return sanitizeMessagesForChatApi(messages);
     }
 
     addSheetContext() {

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import { getJwtSecret } from './lib/jwtSecret.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
@@ -25,6 +26,13 @@ import automationRoutes from './routes/automation.js';
 import { upload } from './middleware/multer.js';
 
 dotenv.config();
+
+try {
+  getJwtSecret();
+} catch (e) {
+  console.error(e.message || e);
+  process.exit(1);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
