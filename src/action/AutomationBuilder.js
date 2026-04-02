@@ -387,14 +387,31 @@ export default class AutomationBuilder {
             enabled: true
         };
 
+        const payload = {
+            name: rule.name,
+            description: '',
+            trigger: rule.trigger,
+            actions: rule.actions,
+            status: rule.enabled !== false ? 'active' : 'inactive',
+            metadata: {
+                conditions: rule.conditions,
+                enabled: rule.enabled,
+                source: 'automation-builder'
+            }
+        };
+
+        const auth =
+            this.token ||
+            (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+
         try {
             const response = await fetch(`${this.backendUrl}/api/automation/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${auth}`
                 },
-                body: JSON.stringify(rule)
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {

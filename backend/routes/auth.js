@@ -158,7 +158,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 // Update Groq API key
 router.put('/groq-api-key', authMiddleware, async (req, res) => {
   try {
-    const { groqApiKey } = req.body;
+    const groqApiKey = req.body.groqApiKey ?? req.body.groq_api_key;
 
     if (!groqApiKey) {
       return res.status(400).json({ error: 'API key is required' });

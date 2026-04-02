@@ -386,24 +386,37 @@ export default class RecordingUIToolbar {
             return;
         }
 
-        try {
-            const scheduler = new this._SN.ActionScheduler(this._SN, {
-                BACKEND_URL: this.backendUrl,
-                AI_TOKEN: this.token
-            });
+        const auth =
+            this.token ||
+            (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+        if (!auth) {
+            this._showNotification('Sign in to replay sessions', 'error');
+            return;
+        }
 
-            // Load and execute session actions
-            const response = await fetch(`${this.backendUrl}/api/actions/sessions/${sessionId}`, {
+        const scheduler = this._SN.ActionScheduler;
+
+        try {
+            const response = await fetch(`${this.backendUrl}/api/actions/sessions/${encodeURIComponent(sessionId)}`, {
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 }
             });
 
             if (response.ok) {
                 const session = await response.json();
+                let actionsRaw = session.actions;
+                if (typeof actionsRaw === 'string') {
+                    try {
+                        actionsRaw = JSON.parse(actionsRaw);
+                    } catch {
+                        actionsRaw = [];
+                    }
+                }
+                const actions = Array.isArray(actionsRaw) ? actionsRaw : [];
                 this._showNotification('Replaying actions...', 'info');
                 
-                for (const action of session.actions) {
+                for (const action of actions) {
                     await scheduler._executeAction(action);
                     await new Promise(r => setTimeout(r, 100)); // Small delay between actions
                 }

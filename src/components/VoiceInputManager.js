@@ -191,8 +191,14 @@ Return ONLY the formula, e.g., =SUM(A1:A10)`;
      * Handle chart creation
      */
     async _handleChartCreation(text) {
-        // Placeholder for chart creation
-        this._notify('Chart creation via voice - feature coming soon', 'info');
+        try {
+            if (this._SN?.Action?.openChartModal) {
+                this._SN.Action.openChartModal();
+                this._notify('Opening chart dialog — choose a chart type for your selection.', 'success');
+                return;
+            }
+        } catch (_) { /* ignore */ }
+        this._notify('Chart: use the Insert toolbar chart button if the dialog did not open.', 'info');
     }
 
     /**
@@ -208,8 +214,14 @@ Respond with JSON: {action: "...", target: "...", value: "..."}`;
 
         try {
             const response = await this._SN.AI.conversation(prompt);
-            const command = JSON.parse(response.content);
-            
+            if (!response) return;
+            const raw =
+                typeof response === 'string'
+                    ? response
+                    : (response.content ?? response.message ?? '');
+            const jsonSlice = raw.match(/\{[\s\S]*\}/);
+            const command = JSON.parse(jsonSlice ? jsonSlice[0] : raw);
+
             if (command.action === 'add data') {
                 const sheet = this._SN.activeSheet;
                 const cell = sheet?.selections?.[0];

@@ -7,7 +7,7 @@ export default class AICharacteristics {
         this._SN = SN;
         this.backendUrl = options.BACKEND_URL || 'http://localhost:3000';
         this.token = options.AI_TOKEN || null;
-        
+
         // Default characteristics
         this.defaultCharacteristics = [
             {
@@ -128,6 +128,13 @@ export default class AICharacteristics {
         
         // Load from backend if available
         this._loadCustomCharacteristics();
+    }
+
+    _bearer() {
+        return (
+            this.token ||
+            (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null)
+        );
     }
 
     /**
@@ -314,12 +321,13 @@ export default class AICharacteristics {
      * Load custom characteristics from backend
      */
     async _loadCustomCharacteristics() {
-        if (!this.token || !this.backendUrl) return;
-        
+        const auth = this._bearer();
+        if (!auth || !this.backendUrl) return;
+
         try {
             const response = await fetch(`${this.backendUrl}/api/characteristics`, {
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 }
             });
             
@@ -339,14 +347,15 @@ export default class AICharacteristics {
      * Save characteristic to backend
      */
     async _saveCharacteristic(characteristic) {
-        if (!this.token || !this.backendUrl) return;
-        
+        const auth = this._bearer();
+        if (!auth || !this.backendUrl) return;
+
         try {
             await fetch(`${this.backendUrl}/api/characteristics`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 },
                 body: JSON.stringify(characteristic)
             });
@@ -359,13 +368,14 @@ export default class AICharacteristics {
      * Delete characteristic from backend
      */
     async _deleteCharacteristic(id) {
-        if (!this.token || !this.backendUrl) return;
-        
+        const auth = this._bearer();
+        if (!auth || !this.backendUrl) return;
+
         try {
             await fetch(`${this.backendUrl}/api/characteristics/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 }
             });
         } catch (error) {
@@ -377,13 +387,14 @@ export default class AICharacteristics {
      * Clear all custom characteristics from backend
      */
     async _clearCustomCharacteristics() {
-        if (!this.token || !this.backendUrl) return;
-        
+        const auth = this._bearer();
+        if (!auth || !this.backendUrl) return;
+
         try {
             await fetch(`${this.backendUrl}/api/characteristics/custom`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 }
             });
         } catch (error) {

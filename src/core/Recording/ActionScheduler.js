@@ -16,6 +16,23 @@ export default class ActionScheduler {
         this._loadSavedTasks();
     }
 
+    _bearer() {
+        return (
+            this.token ||
+            (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null)
+        );
+    }
+
+    _parseJsonField(val) {
+        if (val == null) return val;
+        if (typeof val === 'object') return val;
+        try {
+            return JSON.parse(val);
+        } catch {
+            return val;
+        }
+    }
+
     /**
      * Schedule a task
      */
@@ -88,7 +105,7 @@ export default class ActionScheduler {
             }, task.interval);
             
             task.intervalId = intervalId;
-            this.activeAutomations.add(taskId);
+            this.activeAutomations.add(task.id);
         } else if (task.type === 'cron' && task.schedule) {
             // Cron-based task (simplified)
             this._scheduleCronTask(task);
@@ -362,15 +379,72 @@ export default class ActionScheduler {
      * Save task to backend
      */
     async _saveTask(task) {
+        const auth = this._bearer();
+        if (!auth) return;
+
+        const trigger = {
+            type: task.type || 'interval',
+            schedule: task.schedule ?? null,
+            interval: task.interval ?? null,
+            config: task.metadata?.triggerConfig || {}
+        };
+        const payload = {
+            name: task.name || 'Scheduled task',
+            description: '',
+            trigger,
+            actions: task.actions || [],
+            status: task.enabled !== false ? 'active' : 'inactive',
+            metadata: {
+                ...(task.metadata || {}),
+                source: 'action-scheduler',
+                clientTaskId: task.clientTaskId || task.id
+            }
+        };
+
+        const uuidRe =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const serverId = task.serverId || (uuidRe.test(String(task.id)) ? task.id : null);
+
         try {
-            await fetch(`${this.backendUrl}/api/automation/tasks/${task.id}`, {
+            if (serverId) {
+                await fetch(`${this.backendUrl}/api/automation/tasks/${serverId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${auth}`
+                    },
+                    body: JSON.stringify({
+                        name: payload.name,
+                        description: payload.description,
+                        trigger: payload.trigger,
+                        actions: payload.actions,
+                        status: payload.status,
+                        metadata: payload.metadata
+                    })
+                });
+                return;
+            }
+
+            const res = await fetch(`${this.backendUrl}/api/automation/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 },
-                body: JSON.stringify(task)
+                body: JSON.stringify(payload)
             });
+            if (res.ok) {
+                const row = await res.json();
+                const oldId = task.id;
+                if (row?.id) {
+                    task.serverId = row.id;
+                    task.id = row.id;
+                    if (oldId !== row.id && this.scheduledTasks.has(oldId)) {
+                        this.scheduledTasks.delete(oldId);
+                    }
+                    this.scheduledTasks.set(row.id, task);
+                }
+            }
         } catch (err) {
             console.warn('Failed to save task:', err);
         }
@@ -380,14 +454,30 @@ export default class ActionScheduler {
      * Save automation to backend
      */
     async _saveAutomation(automation) {
+        const auth = this._bearer();
+        if (!auth) return;
+
+        const payload = {
+            name: automation.name || 'Automation',
+            description: '',
+            trigger: automation.trigger || { type: 'event', config: {} },
+            actions: automation.actions || [],
+            status: automation.enabled !== false ? 'active' : 'inactive',
+            metadata: {
+                conditions: automation.conditions || [],
+                source: 'action-scheduler-automation',
+                clientId: automation.id
+            }
+        };
+
         try {
-            await fetch(`${this.backendUrl}/api/automation/rules/${automation.id}`, {
+            await fetch(`${this.backendUrl}/api/automation/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 },
-                body: JSON.stringify(automation)
+                body: JSON.stringify(payload)
             });
         } catch (err) {
             console.warn('Failed to save automation:', err);
@@ -399,20 +489,43 @@ export default class ActionScheduler {
      */
     async _loadSavedTasks() {
         try {
+            const auth = this._bearer();
+            if (!auth) return;
+
             const response = await fetch(`${this.backendUrl}/api/automation/tasks`, {
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 }
             });
-            
-            if (response.ok) {
-                const tasks = await response.json();
-                tasks.forEach(task => {
-                    this.scheduledTasks.set(task.id, task);
-                    if (task.enabled) {
-                        this._startTask(task);
-                    }
-                });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const rows = Array.isArray(data) ? data : data.tasks || [];
+
+            for (const row of rows) {
+                const trigger = this._parseJsonField(row.trigger) || {};
+                const actions = this._parseJsonField(row.actions) || [];
+                const meta = this._parseJsonField(row.metadata) || {};
+                const scheduled = {
+                    id: row.id,
+                    serverId: row.id,
+                    name: row.name,
+                    type: trigger.type || 'interval',
+                    schedule: trigger.schedule ?? null,
+                    interval: trigger.interval ?? null,
+                    actions,
+                    enabled: row.status !== 'inactive' && row.status !== 'archived',
+                    lastRun: null,
+                    nextRun: null,
+                    runCount: 0,
+                    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+                    metadata: meta
+                };
+                this.scheduledTasks.set(scheduled.id, scheduled);
+                if (scheduled.enabled) {
+                    this._startTask(scheduled);
+                }
             }
         } catch (err) {
             console.warn('Failed to load tasks:', err);
@@ -464,13 +577,15 @@ export default class ActionScheduler {
             this.scheduledTasks.delete(id);
             this.activeAutomations.delete(id);
             
-            // Delete from backend
-            fetch(`${this.backendUrl}/api/automation/tasks/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                }
-            });
+            const auth = this._bearer();
+            if (auth) {
+                fetch(`${this.backendUrl}/api/automation/tasks/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${auth}`
+                    }
+                });
+            }
         }
     }
 

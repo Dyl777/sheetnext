@@ -357,11 +357,14 @@ class PageIndexRAG {
      * Search via backend
      */
     async _searchBackend(query, topK) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (typeof localStorage !== 'undefined') {
+            const token = localStorage.getItem('sheetnext_token');
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+        }
         const response = await fetch(`${this.backendUrl}/api/rag/search`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers,
             body: JSON.stringify({ query, topK })
         });
 

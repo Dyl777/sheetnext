@@ -13,15 +13,25 @@ export default class VisionAnalysisUI {
     /**
      * Analyze image and extract data
      */
+    _bearer() {
+        return this.token || (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+    }
+
     async analyzeImage(imageFile, analysisType = 'extract') {
         if (!imageFile) return;
+
+        const auth = this._bearer();
+        if (!auth) {
+            console.error('Vision analysis requires login');
+            return null;
+        }
 
         try {
             const response = await fetch(`${this.backendUrl}/api/groq/vision/analyze`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${auth}`
                 },
                 body: JSON.stringify({
                     imageBase64: await this._fileToBase64(imageFile),

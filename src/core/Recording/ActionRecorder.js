@@ -443,11 +443,19 @@ Task Name:`;
             // Prepare session data in LLM-training format
             const sessionData = this._prepareForLLM(sessionName);
 
+            const auth =
+                this.token ||
+                (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+            if (!auth) {
+                console.warn('ActionRecorder: not authenticated, session not saved');
+                return;
+            }
+
             const response = await fetch(`${this.backendUrl}/api/actions/sessions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 },
                 body: JSON.stringify(sessionData)
             });

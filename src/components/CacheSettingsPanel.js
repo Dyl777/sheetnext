@@ -1,6 +1,6 @@
 /**
- * CacheSettingsPanel - Configure caching strategies
- * Supports: SQLite, NoSQL, IndexedDB, automatic cache management
+ * CacheSettingsPanel - Configure caching (server-side settings API)
+ * Routes live under /api/cache/api/* (see backend/routes/cache-api.js).
  */
 
 export default class CacheSettingsPanel {
@@ -8,11 +8,13 @@ export default class CacheSettingsPanel {
         this._SN = SN;
         this.backendUrl = options.BACKEND_URL || 'http://localhost:3000';
         this.token = options.AI_TOKEN || null;
+        this._apiBase = `${this.backendUrl.replace(/\/$/, '')}/api/cache/api`;
     }
 
-    /**
-     * Create and show cache settings UI
-     */
+    _bearer() {
+        return this.token || (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+    }
+
     show() {
         const dialog = document.createElement('div');
         dialog.className = 'cache-settings-modal';
@@ -24,11 +26,10 @@ export default class CacheSettingsPanel {
                 </div>
                 
                 <div class="dialog-body">
-                    <!-- Cache Strategy -->
                     <div class="setting-section">
                         <h4>Cache Strategy</h4>
                         <label class="radio-option">
-                            <input type="radio" name="strategy" value="memory-first" checked>
+                            <input type="radio" name="strategy" value="memory-first">
                             <span>Memory (Fast, Limited)</span>
                         </label>
                         <label class="radio-option">
@@ -36,26 +37,23 @@ export default class CacheSettingsPanel {
                             <span>SQLite (Persistent, Slower)</span>
                         </label>
                         <label class="radio-option">
-                            <input type="radio" name="strategy" value="hybrid">
+                            <input type="radio" name="strategy" value="hybrid" checked>
                             <span>Hybrid (Memory + SQLite)</span>
                         </label>
                     </div>
 
-                    <!-- Cache Size -->
                     <div class="setting-section">
                         <label>Max Cache Size (MB)</label>
                         <input type="number" id="cacheSize" min="10" max="500" value="100" class="form-input">
                         <small>Older entries deleted when limit reached</small>
                     </div>
 
-                    <!-- TTL (Time to Live) -->
                     <div class="setting-section">
                         <label>Cache Expiration (hours)</label>
                         <input type="number" id="cacheTTL" min="1" max="720" value="24" class="form-input">
                         <small>Entries older than this are automatically removed</small>
                     </div>
 
-                    <!-- AI Response Caching -->
                     <div class="setting-section">
                         <label class="checkbox-option">
                             <input type="checkbox" id="cacheAIResponses" checked>
@@ -64,7 +62,6 @@ export default class CacheSettingsPanel {
                         <small>Reuse similar AI responses (saves API calls)</small>
                     </div>
 
-                    <!-- Document Caching -->
                     <div class="setting-section">
                         <label class="checkbox-option">
                             <input type="checkbox" id="cacheDocuments" checked>
@@ -73,7 +70,6 @@ export default class CacheSettingsPanel {
                         <small>Cache RAG document embeddings for faster retrieval</small>
                     </div>
 
-                    <!-- Formula Result Caching -->
                     <div class="setting-section">
                         <label class="checkbox-option">
                             <input type="checkbox" id="cacheFormulas" checked>
@@ -82,7 +78,6 @@ export default class CacheSettingsPanel {
                         <small>Recalculate only when inputs change</small>
                     </div>
 
-                    <!-- Cache Statistics -->
                     <div class="setting-section">
                         <h4>Cache Statistics</h4>
                         <div class="cache-stats">
@@ -101,102 +96,153 @@ export default class CacheSettingsPanel {
                         </div>
                     </div>
 
-                    <!-- Cache Actions -->
                     <div class="setting-section">
-                        <button class="btn btn-secondary" id="clearCacheBtn">Clear Cache</button>
-                        <button class="btn btn-secondary" id="exportCacheBtn">Export Cache</button>
+                        <button type="button" class="btn btn-secondary" id="clearCacheBtn">Clear Cache</button>
+                        <button type="button" class="btn btn-secondary" id="exportCacheBtn">Export Cache</button>
                     </div>
                 </div>
 
                 <div class="dialog-footer">
-                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-                    <button class="btn btn-success" id="saveBtn">Save Settings</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="button" class="btn btn-success" id="saveBtn">Save Settings</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(dialog);
-        this._loadSettings();
-        this._loadStats();
+        this._loadSettings(dialog);
+        this._loadStats(dialog);
         this._attachListeners(dialog);
     }
 
-    /**
-     * Load current settings
-     */
-    async _loadSettings() {
+    _strategyToRadio(serverStrategy) {
+        const m = { memory: 'memory-first', sqlite: 'disk-first', hybrid: 'hybrid' };
+        return m[serverStrategy] || 'hybrid';
+    }
+
+    _radioToStrategy(radioValue) {
+        const m = { 'memory-first': 'memory', 'disk-first': 'sqlite', hybrid: 'hybrid' };
+        return m[radioValue] || 'hybrid';
+    }
+
+    async _loadSettings(dialog) {
+        const auth = this._bearer();
+        if (!auth) return;
+
         try {
-            const response = await fetch(`${this.backendUrl}/api/cache/settings`, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
+            const response = await fetch(`${this._apiBase}/settings`, {
+                headers: { Authorization: `Bearer ${auth}` }
             });
 
-            if (response.ok) {
-                const settings = await response.json();
-                document.querySelector('input[name="strategy"]').value = settings.strategy;
-                document.querySelector('#cacheSize').value = settings.maxCacheSize;
-                document.querySelector('#cacheTTL').value = settings.ttlHours;
-                document.querySelector('#cacheAIResponses').checked = settings.cacheAI;
-                document.querySelector('#cacheDocuments').checked = settings.cacheDocuments;
-                document.querySelector('#cacheFormulas').checked = settings.cacheFormulas;
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const s = data.settings || {};
+
+            const radioVal = this._strategyToRadio(s.strategy);
+            dialog.querySelectorAll('input[name="strategy"]').forEach((el) => {
+                el.checked = el.value === radioVal;
+            });
+
+            const sizeEl = dialog.querySelector('#cacheSize');
+            if (sizeEl) sizeEl.value = s.maxSizeMB ?? 100;
+
+            const ttlEl = dialog.querySelector('#cacheTTL');
+            if (ttlEl) {
+                const sec = s.ttlSeconds ?? 3600;
+                ttlEl.value = Math.max(1, Math.round(sec / 3600));
             }
+
+            const aiEl = dialog.querySelector('#cacheAIResponses');
+            if (aiEl) aiEl.checked = s.enableAICache !== false;
+
+            const docEl = dialog.querySelector('#cacheDocuments');
+            if (docEl) docEl.checked = s.enableDocumentCache !== false;
+
+            const formEl = dialog.querySelector('#cacheFormulas');
+            if (formEl) formEl.checked = s.enableFormulaCache !== false;
         } catch (error) {
             console.warn('Could not load cache settings:', error);
         }
     }
 
-    /**
-     * Load cache statistics
-     */
-    async _loadStats() {
+    async _loadStats(dialog) {
+        const auth = this._bearer();
+        if (!auth) return;
+
         try {
-            const response = await fetch(`${this.backendUrl}/api/cache/stats`, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
+            const response = await fetch(`${this._apiBase}/stats`, {
+                headers: { Authorization: `Bearer ${auth}` }
             });
 
-            if (response.ok) {
-                const stats = await response.json();
-                document.querySelector('#totalEntries').textContent = stats.totalEntries;
-                document.querySelector('#usedSpace').textContent = (stats.usedSpace / 1024 / 1024).toFixed(2) + ' MB';
-                document.querySelector('#hitRate').textContent = (stats.hitRate * 100).toFixed(1) + '%';
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const st = data.stats || {};
+            const total = st.totalEntries ?? st.totalItems ?? 0;
+            const usedBytes = st.usedSpace ?? 0;
+            let hitPct;
+            if (typeof st.hitRate === 'number') {
+                hitPct = st.hitRate <= 1 ? st.hitRate * 100 : st.hitRate;
+            } else if (typeof st.hitRatePercent === 'string') {
+                hitPct = parseFloat(st.hitRatePercent) || 0;
+            } else {
+                hitPct = 0;
             }
+
+            const te = dialog.querySelector('#totalEntries');
+            if (te) te.textContent = String(total);
+
+            const us = dialog.querySelector('#usedSpace');
+            if (us) us.textContent = (usedBytes / (1024 * 1024)).toFixed(2) + ' MB';
+
+            const hr = dialog.querySelector('#hitRate');
+            if (hr) hr.textContent = hitPct.toFixed(1) + '%';
         } catch (error) {
             console.warn('Could not load cache stats:', error);
         }
     }
 
-    /**
-     * Attach event listeners
-     */
     _attachListeners(dialog) {
         dialog.querySelector('.close-btn')?.addEventListener('click', () => dialog.remove());
         dialog.querySelector('#cancelBtn')?.addEventListener('click', () => dialog.remove());
         dialog.querySelector('#saveBtn')?.addEventListener('click', () => this._saveSettings(dialog));
-        dialog.querySelector('#clearCacheBtn')?.addEventListener('click', () => this._clearCache());
+        dialog.querySelector('#clearCacheBtn')?.addEventListener('click', () => this._clearCache(dialog));
         dialog.querySelector('#exportCacheBtn')?.addEventListener('click', () => this._exportCache());
     }
 
-    /**
-     * Save settings
-     */
     async _saveSettings(dialog) {
-        const settings = {
-            strategy: document.querySelector('input[name="strategy"]:checked')?.value,
-            maxCacheSize: parseInt(document.querySelector('#cacheSize')?.value),
-            ttlHours: parseInt(document.querySelector('#cacheTTL')?.value),
-            cacheAI: document.querySelector('#cacheAIResponses')?.checked,
-            cacheDocuments: document.querySelector('#cacheDocuments')?.checked,
-            cacheFormulas: document.querySelector('#cacheFormulas')?.checked
+        const auth = this._bearer();
+        if (!auth) {
+            console.error('Not signed in');
+            return;
+        }
+
+        const strategyRadio = dialog.querySelector('input[name="strategy"]:checked')?.value || 'hybrid';
+        const payload = {
+            strategy: this._radioToStrategy(strategyRadio),
+            maxSizeMB: parseInt(dialog.querySelector('#cacheSize')?.value, 10) || 100,
+            ttlHours: parseInt(dialog.querySelector('#cacheTTL')?.value, 10) || 24,
+            cacheAI: dialog.querySelector('#cacheAIResponses')?.checked,
+            cacheDocuments: dialog.querySelector('#cacheDocuments')?.checked,
+            cacheFormulas: dialog.querySelector('#cacheFormulas')?.checked
         };
 
         try {
-            await fetch(`${this.backendUrl}/api/cache/settings`, {
+            const response = await fetch(`${this._apiBase}/settings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    Authorization: `Bearer ${auth}`
                 },
-                body: JSON.stringify(settings)
+                body: JSON.stringify(payload)
             });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                console.error('Save failed:', err.error || response.statusText);
+                return;
+            }
 
             console.log('✓ Cache settings saved');
             dialog.remove();
@@ -205,32 +251,34 @@ export default class CacheSettingsPanel {
         }
     }
 
-    /**
-     * Clear cache
-     */
-    async _clearCache() {
+    async _clearCache(dialog) {
         if (!confirm('Clear all cache? This action cannot be undone.')) return;
 
+        const auth = this._bearer();
+        if (!auth) return;
+
         try {
-            await fetch(`${this.backendUrl}/api/cache/clear`, {
+            const response = await fetch(`${this._apiBase}/clear`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${this.token}` }
+                headers: { Authorization: `Bearer ${auth}` }
             });
 
-            console.log('✓ Cache cleared');
-            this._loadStats();
+            if (response.ok) {
+                console.log('✓ Cache cleared');
+                if (dialog) this._loadStats(dialog);
+            }
         } catch (error) {
             console.error('Failed to clear cache:', error);
         }
     }
 
-    /**
-     * Export cache
-     */
     async _exportCache() {
+        const auth = this._bearer();
+        if (!auth) return;
+
         try {
-            const response = await fetch(`${this.backendUrl}/api/cache/export`, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
+            const response = await fetch(`${this._apiBase}/export`, {
+                headers: { Authorization: `Bearer ${auth}` }
             });
 
             if (response.ok) {
@@ -240,6 +288,7 @@ export default class CacheSettingsPanel {
                 link.href = url;
                 link.download = `cache-export-${Date.now()}.json`;
                 link.click();
+                window.URL.revokeObjectURL(url);
             }
         } catch (error) {
             console.error('Failed to export cache:', error);

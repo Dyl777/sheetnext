@@ -210,20 +210,28 @@ export default class AutomationTemplates {
     async _deployTemplate(template, dialog) {
         if (!confirm(`Deploy "${template.name}" automation?`)) return;
 
+        const auth =
+            this.token ||
+            (typeof localStorage !== 'undefined' ? localStorage.getItem('sheetnext_token') : null);
+
         try {
             const response = await fetch(`${this.backendUrl}/api/automation/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${auth}`
                 },
                 body: JSON.stringify({
                     name: template.name,
+                    description: template.description || '',
                     trigger: template.trigger,
-                    conditions: template.conditions || [],
                     actions: template.actions,
-                    enabled: true,
-                    fromTemplate: template.id
+                    status: 'active',
+                    metadata: {
+                        conditions: template.conditions || [],
+                        enabled: true,
+                        fromTemplate: template.id
+                    }
                 })
             });
 

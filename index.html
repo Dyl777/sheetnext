@@ -524,10 +524,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ groq_api_key: apiKey })
+                    body: JSON.stringify({ groqApiKey: apiKey })
                 });
 
                 const data = await response.json();
+                if (!response.ok) {
+                    return { success: false, error: data.error || response.statusText };
+                }
                 console.log('✓ Groq API key updated');
                 return { success: true };
             } catch (error) {

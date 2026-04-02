@@ -47,7 +47,8 @@ export default class DocumentUploadPipeline {
     }
 
     /**
-     * Upload and process file
+     * Upload file to backend — server converts to markdown and chunks for RAG.
+     * (Older client-only extract/embed + JSON upload did not match /api/documents/upload.)
      */
     async uploadAndProcess(file, documentName = null) {
         try {
@@ -62,30 +63,46 @@ export default class DocumentUploadPipeline {
             };
 
             this.isProcessing = true;
-            this._notifyProgress('Uploading file...', 0);
+            this._notifyProgress('Uploading file...', 20);
 
-            // Step 1: Extract text
-            const text = await this._extractText(file);
-            this._notifyProgress('Extracted text', 25);
+            const token = this._resolveAuthToken();
+            if (!token) {
+                throw new Error('Sign in to upload documents (missing auth token).');
+            }
 
-            // Step 2: Chunk text
-            const chunks = await this._chunkText(text);
-            this._notifyProgress(`Created ${chunks.length} chunks`, 50);
+            const formData = new FormData();
+            formData.append('file', file, file.name);
+            formData.append('title', this.currentFile.name);
 
-            // Step 3: Generate embeddings via backend
-            const chunksWithEmbeddings = await this._generateEmbeddings(chunks);
-            this._notifyProgress(`Generated ${chunksWithEmbeddings.length} embeddings`, 75);
+            const response = await fetch(`${this.backendUrl}/api/documents/upload`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                body: formData
+            });
 
-            // Step 4: Store in backend
-            const documentId = await this._storeDocument(this.currentFile, text, chunksWithEmbeddings);
-            this._notifyProgress('Document stored in RAG system', 90);
+            if (!response.ok) {
+                let detail = response.statusText;
+                try {
+                    const err = await response.json();
+                    if (err.error) detail = err.error;
+                } catch (_) { /* ignore */ }
+                throw new Error(detail || 'Document upload failed');
+            }
 
+            const data = await response.json();
+            const documentId = data.document?.id;
+            const chunkCount = data.document?.chunkCount ?? 0;
+            const preview = data.document?.markdownPreview || '';
+
+            this._notifyProgress('Document stored in RAG system', 100);
             this.isProcessing = false;
             this._notifyComplete({
                 documentId,
                 fileName: this.currentFile.name,
-                chunkCount: chunksWithEmbeddings.length,
-                textLength: text.length,
+                chunkCount,
+                textLength: preview.length,
                 status: 'success'
             });
 
@@ -95,6 +112,14 @@ export default class DocumentUploadPipeline {
             this._notifyError(error.message);
             throw error;
         }
+    }
+
+    _resolveAuthToken() {
+        if (this.token) return this.token;
+        if (typeof localStorage !== 'undefined') {
+            return localStorage.getItem('sheetnext_token');
+        }
+        return null;
     }
 
     /**
@@ -375,11 +400,12 @@ export default class DocumentUploadPipeline {
      */
     async _generateEmbeddings(chunks) {
         try {
+            const token = this._resolveAuthToken();
             const response = await fetch(`${this.backendUrl}/api/rag/embed-chunks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
                 },
                 body: JSON.stringify({ chunks })
             });
@@ -405,36 +431,10 @@ export default class DocumentUploadPipeline {
      * Store document and chunks in backend
      */
     async _storeDocument(fileInfo, fullText, chunks) {
-        try {
-            const response = await fetch(`${this.backendUrl}/api/documents/upload`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
-                },
-                body: JSON.stringify({
-                    name: fileInfo.name,
-                    source: fileInfo.originalName,
-                    content: fullText,
-                    chunks: chunks,
-                    metadata: {
-                        uploadedAt: fileInfo.uploadedAt,
-                        size: fileInfo.size,
-                        type: fileInfo.type
-                    }
-                })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                return result.id || result.documentId;
-            } else {
-                throw new Error('Document storage failed');
-            }
-        } catch (error) {
-            console.error('Storage error:', error);
-            throw error;
-        }
+        console.warn(
+            'DocumentUploadPipeline._storeDocument (JSON) is deprecated; use uploadAndProcess(file) with multipart upload.'
+        );
+        throw new Error('Use uploadAndProcess(file) — server expects multipart /api/documents/upload');
     }
 
     /**

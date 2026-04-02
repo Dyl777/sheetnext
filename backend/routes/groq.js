@@ -114,38 +114,55 @@ router.get('/models', authMiddleware, async (req, res) => {
 // Vision/image analysis endpoint
 router.post('/vision/analyze', authMiddleware, async (req, res) => {
   try {
-    const { imageUrl, prompt = 'Describe this image in detail and convert any text or tables to markdown.' } = req.body;
-    
+    const {
+      imageUrl,
+      imageBase64,
+      prompt = 'Describe this image in detail and convert any text or tables to markdown.',
+    } = req.body;
+
+    let url = imageUrl;
+    if (!url && imageBase64) {
+      url = imageBase64.startsWith('data:')
+        ? imageBase64
+        : `data:image/jpeg;base64,${imageBase64}`;
+    }
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'imageUrl or imageBase64 is required' });
+    }
+
     const user = await userModel.findById(req.userId);
     const apiKey = user?.groq_api_key || process.env.GROQ_API_KEY;
-    
+
     if (!apiKey) {
       return res.status(400).json({ error: 'Groq API key not configured' });
     }
-    
+
+    const visionModel =
+      process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview';
+
     const groq = new Groq({ apiKey });
-    
+
     const response = await groq.chat.completions.create({
-      model: 'moonshotai/kimi-k2-instruct',
+      model: visionModel,
       messages: [
         {
           role: 'user',
           content: [
             { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: imageUrl } }
-          ]
-        }
+            { type: 'image_url', image_url: { url } },
+          ],
+        },
       ],
-      max_tokens: 4096
+      max_tokens: 4096,
     });
-    
+
     res.json({
       analysis: response.choices[0].message.content,
-      model: 'moonshotai/kimi-k2-instruct'
+      model: visionModel,
     });
   } catch (error) {
     console.error('Vision analysis error:', error);
-    res.status(500).json({ error: 'Vision analysis failed' });
+    res.status(500).json({ error: 'Vision analysis failed', details: error.message });
   }
 });
 

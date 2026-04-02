@@ -20,12 +20,14 @@ let cacheConfig = {
 
 let cacheStats = {
     totalRequests: 0,
+    cacheInMemoryKeys: 0,
     cacheHits: 0,
     cacheMisses: 0,
     totalItems: 0,
     totalSizeMB: 0,
     memoryUsage: 0,
-    diskUsage: 0
+    diskUsage: 0,
+    usedSpaceBytes: 0
 };
 
 /**
@@ -50,14 +52,25 @@ router.get('/settings', authMiddleware, (req, res) => {
  */
 router.post('/settings', authMiddleware, express.json(), (req, res) => {
     try {
-        const { strategy, maxSizeMB, ttlSeconds, enableAICache, enableDocumentCache, enableFormulaCache } = req.body;
+        const b = req.body;
+        const strategy = b.strategy;
+        const maxSizeMB = b.maxSizeMB ?? b.maxCacheSize;
+        const ttlSeconds =
+            b.ttlSeconds !== undefined
+                ? b.ttlSeconds
+                : b.ttlHours !== undefined
+                    ? Number(b.ttlHours) * 3600
+                    : undefined;
+        const enableAICache = b.enableAICache ?? b.cacheAI;
+        const enableDocumentCache = b.enableDocumentCache ?? b.cacheDocuments;
+        const enableFormulaCache = b.enableFormulaCache ?? b.cacheFormulas;
 
         if (strategy) cacheConfig.strategy = strategy;
         if (maxSizeMB !== undefined) cacheConfig.maxSizeMB = maxSizeMB;
         if (ttlSeconds !== undefined) cacheConfig.ttlSeconds = ttlSeconds;
-        if (enableAICache !== undefined) cacheConfig.enableAICache = enableAICache;
-        if (enableDocumentCache !== undefined) cacheConfig.enableDocumentCache = enableDocumentCache;
-        if (enableFormulaCache !== undefined) cacheConfig.enableFormulaCache = enableFormulaCache;
+        if (enableAICache !== undefined) cacheConfig.enableAICache = !!enableAICache;
+        if (enableDocumentCache !== undefined) cacheConfig.enableDocumentCache = !!enableDocumentCache;
+        if (enableFormulaCache !== undefined) cacheConfig.enableFormulaCache = !!enableFormulaCache;
 
         console.log('✓ Cache settings updated:', cacheConfig);
 
@@ -77,15 +90,22 @@ router.post('/settings', authMiddleware, express.json(), (req, res) => {
  */
 router.get('/stats', authMiddleware, (req, res) => {
     try {
-        const hitRate = cacheStats.totalRequests > 0 
-            ? ((cacheStats.cacheHits / cacheStats.totalRequests) * 100).toFixed(2)
+        const hitRatePct = cacheStats.totalRequests > 0
+            ? (cacheStats.cacheHits / cacheStats.totalRequests) * 100
             : 0;
+        const usedSpaceBytes =
+            cacheStats.usedSpaceBytes > 0
+                ? cacheStats.usedSpaceBytes
+                : Math.round((cacheStats.totalSizeMB || 0) * 1024 * 1024);
 
         res.json({
             success: true,
             stats: {
                 ...cacheStats,
-                hitRate: `${hitRate}%`,
+                hitRate: hitRatePct / 100,
+                hitRatePercent: `${hitRatePct.toFixed(1)}%`,
+                totalEntries: cacheStats.totalItems || cacheStats.totalRequests,
+                usedSpace: usedSpaceBytes,
                 strategy: cacheConfig.strategy,
                 maxSizeMB: cacheConfig.maxSizeMB
             },
@@ -105,12 +125,14 @@ router.post('/clear', authMiddleware, (req, res) => {
         // Reset stats
         cacheStats = {
             totalRequests: 0,
+            cacheInMemoryKeys: 0,
             cacheHits: 0,
             cacheMisses: 0,
             totalItems: 0,
             totalSizeMB: 0,
             memoryUsage: 0,
-            diskUsage: 0
+            diskUsage: 0,
+            usedSpaceBytes: 0
         };
 
         console.log('✓ Cache cleared');
