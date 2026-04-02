@@ -732,6 +732,7 @@ export default class AI {
         this.apiUrl = options.AI_URL || "http://localhost:8080/v1/chat/completions";
         this.modelName = options.AI_MODEL || "llama";
         this.apiKey = options.AI_TOKEN || "no-key";
+        this.aiToken = options.AI_TOKEN || ""; // Store token separately for backend auth
         
         // Groq Configuration
         this.groqApiKey = options.GROQ_API_KEY || "";
@@ -1121,8 +1122,10 @@ Always be concise, accurate, and helpful.`;
 
         const loadingId = this._appendMessageToUI("Thinking...", 'ai', true);
 
+        let requestBody; // Define outside try so it's accessible in catch
+        
         try {
-            const requestBody = {
+            requestBody = {
                 model: this.useGroq ? this.groqModel : this.modelName,
                 messages: this._prepareMessages(conv),
                 max_tokens: this.maxTokens,
@@ -1168,21 +1171,72 @@ Always be concise, accurate, and helpful.`;
 
         } catch (err) {
             console.error('AI Error:', err);
-            this._removeMessageFromUI(loadingId);
             
-            const errorMsg = `Error: ${err.message}. ${this.useGroq ? 'Check Groq API key.' : 'Ensure llama-server is running.'}`;
-            this._appendMessageToUI(errorMsg, 'error');
+            // Attempt fallback to alternative API
+            const primaryProvider = this.useGroq ? 'Groq' : 'llama-server';
+            const fallbackProvider = this.useGroq ? 'llama-server' : 'Groq';
+            
+            console.warn(`${primaryProvider} failed. Attempting fallback to ${fallbackProvider}...`);
+            
+            try {
+                this._SN.Event.emit('aiRequestFallback', {
+                    from: primaryProvider,
+                    to: fallbackProvider,
+                    error: err.message
+                });
 
-            this._SN.Event.emit('aiRequestError', {
-                error: err,
-                url: this.useGroq ? 'https://api.groq.com' : this.apiUrl
-            });
+                // Toggle provider and retry
+                this.useGroq = !this.useGroq;
+                
+                // Update requestBody with new model
+                requestBody.model = this.useGroq ? this.groqModel : this.modelName;
 
-            if (onError) {
-                onError(err);
+                let aiResponse = '';
+
+                if (stream) {
+                    aiResponse = await this._handleStreaming(requestBody, loadingId, onChunk);
+                } else {
+                    aiResponse = await this._handleNonStreaming(requestBody, loadingId);
+                }
+
+                this._removeMessageFromUI(loadingId);
+                const msgId = this._appendMessageToUI(aiResponse.content || aiResponse, 'ai');
+                this.conversationManager.addMessage(conv.id, 'assistant', aiResponse.content || aiResponse);
+
+                const fallbackMsg = `✓ Switched to ${fallbackProvider}:\n${aiResponse.content || aiResponse}`;
+                console.log(`Fallback succeeded using ${fallbackProvider}`);
+
+                this._SN.Event.emit('afterAIRequest', {
+                    response: aiResponse,
+                    messages: conv.messages,
+                    fallback: true
+                });
+
+                if (onComplete) {
+                    onComplete(aiResponse, conv.messages);
+                }
+
+                return aiResponse;
+
+            } catch (fallbackErr) {
+                console.error(`Fallback to ${fallbackProvider} also failed:`, fallbackErr);
+                this._removeMessageFromUI(loadingId);
+                
+                const errorMsg = `✗ Both providers failed:\n- ${primaryProvider}: ${err.message}\n- ${fallbackProvider}: ${fallbackErr.message}`;
+                this._appendMessageToUI(errorMsg, 'error');
+
+                this._SN.Event.emit('aiRequestError', {
+                    error: { primary: err, fallback: fallbackErr },
+                    providers: { primary: primaryProvider, fallback: fallbackProvider },
+                    url: this.useGroq ? 'https://api.groq.com' : this.apiUrl
+                });
+
+                if (onError) {
+                    onError(new Error(errorMsg));
+                }
+
+                throw new Error(errorMsg);
             }
-
-            throw err;
         } finally {
             this._SN.Event.emit('aiRequestFinally', { success: true });
         }
@@ -1301,14 +1355,27 @@ Always be concise, accurate, and helpful.`;
 
     setConfig(config) {
         if (config.apiUrl) this.apiUrl = config.apiUrl;
+        if (config.AI_URL) this.apiUrl = config.AI_URL;
         if (config.modelName) this.modelName = config.modelName;
+        if (config.AI_MODEL) this.modelName = config.AI_MODEL;
         if (config.maxTokens) this.maxTokens = config.maxTokens;
+        if (config.AI_MAX_TOKENS) this.maxTokens = config.AI_MAX_TOKENS;
         if (config.temperature) this.temperature = config.temperature;
+        if (config.AI_TEMPERATURE) this.temperature = config.AI_TEMPERATURE;
         if (config.topP) this.topP = config.topP;
+        if (config.AI_TOP_P) this.topP = config.AI_TOP_P;
         if (config.streamEnabled !== undefined) this.streamEnabled = config.streamEnabled;
+        if (config.AI_STREAM !== undefined) this.streamEnabled = config.AI_STREAM;
         if (config.toolsEnabled !== undefined) this.toolsEnabled = config.toolsEnabled;
+        if (config.AI_TOOLS !== undefined) this.toolsEnabled = config.AI_TOOLS;
         if (config.ragEnabled !== undefined) this.setRAGEnabled(config.ragEnabled);
+        if (config.AI_RAG_ENABLED !== undefined) this.setRAGEnabled(config.AI_RAG_ENABLED);
         if (config.groqApiKey !== undefined) this.setGroqApiKey(config.groqApiKey);
+        if (config.GROQ_API_KEY !== undefined) this.setGroqApiKey(config.GROQ_API_KEY);
+        
+        // Token for backend proxy authentication
+        if (config.aiToken !== undefined) this.aiToken = config.aiToken;
+        if (config.AI_TOKEN !== undefined) this.aiToken = config.AI_TOKEN;
     }
 
     // ==================== Internal Methods ====================
@@ -1319,13 +1386,22 @@ Always be concise, accurate, and helpful.`;
             'Content-Type': 'application/json'
         };
         
-        if (this.useGroq) {
+        // Add auth token if using backend proxy
+        if (this.apiUrl.includes('/api/groq/') || this.apiUrl.includes('/api/auth/')) {
+            const token = localStorage.getItem('sheetnext_token') || this.aiToken;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        // Add Groq API key if using direct Groq
+        else if (this.useGroq && this.groqApiKey) {
             headers['Authorization'] = `Bearer ${this.groqApiKey}`;
         }
 
         const response = await fetch(url, {
             method: 'POST',
-            headers
+            headers,
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
@@ -1379,7 +1455,15 @@ Always be concise, accurate, and helpful.`;
             'Content-Type': 'application/json'
         };
         
-        if (this.useGroq) {
+        // Add auth token if using backend proxy
+        if (this.apiUrl.includes('/api/groq/') || this.apiUrl.includes('/api/auth/')) {
+            const token = localStorage.getItem('sheetnext_token') || this.aiToken;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        // Add Groq API key if using direct Groq
+        else if (this.useGroq && this.groqApiKey) {
             headers['Authorization'] = `Bearer ${this.groqApiKey}`;
         }
 

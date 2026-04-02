@@ -1,0 +1,384 @@
+/* Automation Builder Styles */
+.automation-builder-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.automation-builder-dialog {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.builder-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.builder-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+.builder-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.required {
+    color: #f44336;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.trigger-config {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.trigger-config-item {
+    margin-bottom: 12px;
+}
+
+.trigger-config-item:last-child {
+    margin-bottom: 0;
+}
+
+.day-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.day-checkbox {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.day-checkbox input {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.conditions-list,
+.actions-list {
+    margin-bottom: 12px;
+}
+
+.condition-item,
+.action-item {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.condition-row,
+.action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 40px;
+    gap: 8px;
+    align-items: end;
+}
+
+@media (max-width: 768px) {
+    .condition-row,
+    .action-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.condition-type,
+.condition-operator,
+.action-type {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.condition-value,
+.action-params {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.remove-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover {
+    background: #d32f2f;
+}
+
+.add-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.add-btn:hover {
+    background: #45a049;
+}
+
+.rule-preview {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 16px;
+    min-height: 100px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.preview-empty {
+    color: #999;
+    margin: 0;
+}
+
+.builder-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: #2196f3;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+}
+
+.btn-success {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #45a049;
+}
+
+/* Document Upload Styles */
+.document-upload-panel {
+    padding: 20px;
+}
+
+.upload-area {
+    border: 2px dashed #2196f3;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f0f7ff;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    border-color: #1976d2;
+    background: #e3f2fd;
+}
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    color: #2196f3;
+}
+
+.upload-area h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.upload-area p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.supported-formats {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #999;
+}
+
+.progress-item {
+    margin: 20px 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2196f3, #1976d2);
+    transition: width 0.3s;
+}
+
+.success-message {
+    padding: 16px;
+    background: #e8f5e9;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.success-message p {
+    margin: 0 0 16px 0;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+#progressText,
+#progressPercent {
+    margin: 8px 0;
+    color: #333;
+    font-size: 14px;
+}
+
+/* Notification Styles */
+.notification {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-success {
+    background: #4caf50 !important;
+}
+
+.notification-error {
+    background: #f44336 !important;
+}
+
+.notification-info {
+    background: #2196f3 !important;
+}

@@ -1,7 +1,7 @@
 import express from 'express';
 import { documentModel, documentChunkModel } from '../models/Document.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { upload } from '../server.js';
+import { upload } from '../middleware/multer.js';
 import Groq from 'groq-sdk';
 import fs from 'fs';
 import path from 'path';

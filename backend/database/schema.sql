@@ -129,6 +129,41 @@ CREATE TABLE IF NOT EXISTS user_settings (
 
 CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
 
+-- Automation tasks table
+CREATE TABLE IF NOT EXISTS automation_tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    trigger JSONB,
+    actions JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'archived')),
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_automation_tasks_user_id ON automation_tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_automation_tasks_status ON automation_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_automation_tasks_created_at ON automation_tasks(created_at DESC);
+
+-- Automation executions table (for logging task runs)
+CREATE TABLE IF NOT EXISTS automation_executions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id UUID NOT NULL REFERENCES automation_tasks(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed')),
+    result JSONB,
+    error_message TEXT,
+    executed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    duration_ms INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_automation_executions_task_id ON automation_executions(task_id);
+CREATE INDEX IF NOT EXISTS idx_automation_executions_user_id ON automation_executions(user_id);
+CREATE INDEX IF NOT EXISTS idx_automation_executions_status ON automation_executions(status);
+CREATE INDEX IF NOT EXISTS idx_automation_executions_executed_at ON automation_executions(executed_at DESC);
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -146,6 +181,9 @@ CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON documents
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_automation_tasks_updated_at BEFORE UPDATE ON automation_tasks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings

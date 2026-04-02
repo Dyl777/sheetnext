@@ -18,7 +18,11 @@ import audioRoutes from './routes/audio.js';
 import characteristicsRoutes from './routes/characteristics.js';
 import cacheRoutes from './routes/cache.js';
 import advancedCacheRoutes from './routes/cache-advanced.js';
+import cacheApiRoutes from './routes/cache-api.js';
+import voiceApiRoutes from './routes/voice-api.js';
 import actionRoutes from './routes/actions.js';
+import automationRoutes from './routes/automation.js';
+import { upload } from './middleware/multer.js';
 
 dotenv.config();
 
@@ -36,43 +40,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Create uploads directory if it doesn't exist
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|md|csv|xlsx/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype.replace('vnd.openxmlformats-officedocument.', ''));
-  
-  if (extname || mimetype) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Allowed: images, PDF, DOC, DOCX, TXT, MD, CSV, XLSX'));
-  }
-};
-
-export const upload = multer({
-  storage,
-  limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 // 10MB
-  },
-  fileFilter
-});
 
 // Error handling middleware for multer
 app.use((err, req, res, next) => {
@@ -96,7 +63,10 @@ app.use('/api/audio', audioRoutes);
 app.use('/api/characteristics', characteristicsRoutes);
 app.use('/api/cache', cacheRoutes);
 app.use('/api/cache/advanced', advancedCacheRoutes);
+app.use('/api/cache/api', cacheApiRoutes);
+app.use('/api/voice', voiceApiRoutes);
 app.use('/api/actions', actionRoutes);
+app.use('/api/automation', automationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

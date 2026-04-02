@@ -8,6 +8,10 @@ export default defineConfig({
       '@docs': resolve(__dirname, 'docs')
     }
   },
+  server: {
+    port: 5179,
+    host: 'localhost'
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.js'),

@@ -154,4 +154,118 @@ router.get('/test-key', authMiddleware, async (req, res) => {
   }
 });
 
+// Fallback-enabled chat endpoint (tries Groq, falls back to llama-server)
+router.post('/chat/completions-with-fallback', authMiddleware, async (req, res) => {
+  try {
+    const { messages, model, max_tokens = 4096, stream = false, preferProvider = 'groq' } = req.body;
+    
+    const user = await userModel.findById(req.userId);
+    const groqApiKey = user?.groq_api_key || process.env.GROQ_API_KEY;
+    const llamaServerUrl = process.env.LLAMA_SERVER_URL || 'http://localhost:8080/v1/chat/completions';
+
+    let primaryError = null;
+    let attempt = 0;
+    const maxAttempts = 2;
+
+    while (attempt < maxAttempts) {
+      const shouldUseGroq = (preferProvider === 'groq' && attempt === 0) || (preferProvider !== 'groq' && attempt === 1);
+
+      try {
+        if (shouldUseGroq) {
+          if (!groqApiKey) {
+            throw new Error('Groq API key not configured');
+          }
+
+          const groq = new Groq({ apiKey: groqApiKey });
+          const response = await groq.chat.completions.create({
+            model: model || 'llama-3.2-90b-vision-preview',
+            messages,
+            max_tokens,
+            stream
+          });
+
+          if (stream) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+            
+            for await (const chunk of response) {
+              res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+            
+            res.write('data: [DONE]\n\n');
+            res.end();
+          } else {
+            res.json(response);
+          }
+          return;
+        } else {
+          // Fallback to llama-server
+          const response = await fetch(llamaServerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model || 'llama',
+              messages,
+              max_tokens,
+              stream
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`llama-server error: ${response.statusText}`);
+          }
+
+          if (stream) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                res.write('data: [DONE]\n\n');
+                res.end();
+                break;
+              }
+              res.write(decoder.decode(value));
+            }
+          } else {
+            const data = await response.json();
+            res.json(data);
+          }
+          return;
+        }
+      } catch (err) {
+        primaryError = err;
+        console.warn(`${shouldUseGroq ? 'Groq' : 'llama-server'} failed: ${err.message}`);
+        attempt++;
+        
+        if (attempt < maxAttempts) {
+          console.log(`Attempting fallback to ${!shouldUseGroq ? 'Groq' : 'llama-server'}...`);
+        }
+      }
+    }
+
+    // Both providers failed
+    res.status(503).json({
+      error: 'Both AI providers failed',
+      details: primaryError?.message,
+      providers: {
+        groq: groqApiKey ? 'available (failed)' : 'not configured',
+        llamaServer: llamaServerUrl
+      }
+    });
+  } catch (error) {
+    console.error('Fallback chat error:', error);
+    res.status(500).json({
+      error: 'Chat completion failed',
+      details: error.message
+    });
+  }
+});
+
 export default router;

@@ -20,12 +20,514 @@
 </head>
 <body>
     <div class="sn-demo"></div>
+    
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="auth-modal" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>Welcome to SheetNext</h1>
+                <p>Powerful AI-powered spreadsheet platform</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+            
+            <!-- Login Tab -->
+            <div id="login-tab" class="auth-form active">
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </div>
+                    <div id="login-error" class="error-message" style="display: none;"></div>
+                    <button type="submit" class="auth-button">
+                        <span id="login-button-text">Login</span>
+                        <span id="login-spinner" style="display: none;">⏳</span>
+                    </button>
+                </form>
+                <p class="demo-hint">Demo: Use test@example.com / password123 (or register new)</p>
+            </div>
+            
+            <!-- Register Tab -->
+            <div id="register-tab" class="auth-form" style="display: none;">
+                <form id="register-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="register-name">Name</label>
+                        <input type="text" id="register-name" required placeholder="Your Full Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required placeholder="••••••••" minlength="6">
+                    </div>
+                    <div id="register-error" class="error-message" style="display: none;"></div>
+                    <button type="submit" class="auth-button">
+                        <span id="register-button-text">Create Account</span>
+                        <span id="register-spinner" style="display: none;">⏳</span>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="auth-footer">
+                <p>🔒 Your data is encrypted and secure</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Auth Modal Styles - Huawei Themed */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0e27;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .auth-container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-header h1 {
+            color: #003da5;
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-header p {
+            color: #6f7789;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 32px;
+            background: #f5f6f7;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: #6f7789;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            background: #ffffff;
+            color: #003da5;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #212529;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: 0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d7dce0;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #212529;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #003da5;
+            box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1);
+            background: #ffffff;
+        }
+
+        .form-group input::placeholder {
+            color: #a8abb2;
+        }
+
+        .error-message {
+            background: #fef3f2;
+            border: 1px solid #f4a29c;
+            color: #c6302d;
+            padding: 12px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #003da5;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .auth-button:hover {
+            background: #002a78;
+            box-shadow: 0 4px 12px rgba(0, 61, 165, 0.15);
+        }
+
+        .auth-button:active {
+            background: #001f52;
+        }
+
+        .demo-hint {
+            color: #a8abb2;
+            font-size: 12px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eff0f1;
+            color: #a8abb2;
+            font-size: 12px;
+        }
+    </style>
+
+    <script>
+        // Auth Modal Handler Functions
+        function showAuthModal() {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal && !localStorage.getItem('sheetnext_token')) {
+                authModal.style.display = 'flex';
+            }
+        }
+
+        function hideAuthModal() {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                authModal.style.display = 'none';
+            }
+        }
+
+        // Tab Switching
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabName = e.target.dataset.tab;
+                    
+                    // Deactivate all tabs and forms
+                    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                    
+                    // Activate selected tab and form
+                    e.target.classList.add('active');
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                    
+                    // Clear error messages
+                    document.getElementById(`${tabName}-error`)?.style.setProperty('display', 'none');
+                });
+            });
+
+            // Show auth modal if not authenticated
+            if (!localStorage.getItem('sheetnext_token')) {
+                showAuthModal();
+            }
+        });
+
+        // Login Handler
+        window.handleLogin = async (event) => {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            const buttonText = document.getElementById('login-button-text');
+            const spinner = document.getElementById('login-spinner');
+            
+            try {
+                errorEl.style.display = 'none';
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline-block';
+                
+                const result = await window.login(email, password);
+                
+                if (result.success) {
+                    setTimeout(() => {
+                        hideAuthModal();
+                        location.reload();
+                    }, 500);
+                } else {
+                    errorEl.textContent = result.error || 'Login failed. Please try again.';
+                    errorEl.style.display = 'block';
+                    buttonText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                errorEl.textContent = 'Connection error: ' + error.message;
+                errorEl.style.display = 'block';
+                buttonText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        };
+
+        // Register Handler
+        window.handleRegister = async (event) => {
+            event.preventDefault();
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const errorEl = document.getElementById('register-error');
+            const buttonText = document.getElementById('register-button-text');
+            const spinner = document.getElementById('register-spinner');
+            
+            try {
+                errorEl.style.display = 'none';
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline-block';
+                
+                const result = await window.register(name, email, password);
+                
+                if (result.success) {
+                    setTimeout(() => {
+                        hideAuthModal();
+                        location.reload();
+                    }, 500);
+                } else {
+                    errorEl.textContent = result.error || 'Registration failed. Please try again.';
+                    errorEl.style.display = 'block';
+                    buttonText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                errorEl.textContent = 'Connection error: ' + error.message;
+                errorEl.style.display = 'block';
+                buttonText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        };
+    </script>
+
     <script type="module">
         import SheetNext from './src/index.js';
 
-        new SheetNext(document.querySelector('.sn-demo'), {
-            locale: 'en-US'
+        // Secure Backend Configuration - API Key Handled Server-Side
+        window.SN = new SheetNext(document.querySelector('.sn-demo'), {
+            locale: 'en-US',
+            
+            // Backend Connection
+            BACKEND_URL: 'http://localhost:3000',
+            
+            // AI Configuration - Backend Proxy (No API Key in Frontend)
+            AI_URL: 'http://localhost:3000/api/groq/chat/completions-with-fallback',
+            AI_MODEL: 'llama-3.2-90b-vision-preview',
+            AI_STREAM: true,
+            AI_TOOLS: true,
+            
+            // Max tokens and temperature
+            AI_MAX_TOKENS: 4096,
+            AI_TEMPERATURE: 0.7,
+            
+            // Multi-conversation support
+            AI_MAX_CONVERSATIONS: 10,
+            
+            // RAG Document Q&A
+            AI_RAG_ENABLED: true,
+            RAG_CHUNK_SIZE: 512,
+            RAG_TOP_K: 3,
+            
+            // File upload configuration
+            MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+            
+            // Auth token (populated after login)
+            AI_TOKEN: localStorage.getItem('sheetnext_token')
         });
+
+        // Check authentication status
+        const token = localStorage.getItem('sheetnext_token');
+        if (token) {
+            console.log('✓ User authenticated with token');
+            window.SN.AI.setConfig({ AI_TOKEN: token });
+        } else {
+            console.log('ℹ User not authenticated. Use window.login(email, password) or window.register(name, email, password)');
+        }
+    </script>
+
+    <script>
+        // Authentication Helper Functions (non-module for global access)
+        
+        // Login function
+        window.login = async function(email, password) {
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.token) {
+                    localStorage.setItem('sheetnext_token', data.token);
+                    localStorage.setItem('sheetnext_user_id', data.userId);
+                    console.log('✓ Login successful');
+                    
+                    // Update SheetNext config with token
+                    if (window.SN && window.SN.AI) {
+                        window.SN.AI.setConfig({
+                            AI_TOKEN: data.token
+                        });
+                    }
+                    
+                    return { success: true, token: data.token };
+                } else {
+                    console.error('Login failed:', data.error);
+                    return { success: false, error: data.error };
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Register function
+        window.register = async function(name, email, password) {
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.token) {
+                    localStorage.setItem('sheetnext_token', data.token);
+                    localStorage.setItem('sheetnext_user_id', data.userId);
+                    console.log('✓ Registration successful');
+                    
+                    // Update SheetNext config with token
+                    if (window.SN && window.SN.AI) {
+                        window.SN.AI.setConfig({
+                            AI_TOKEN: data.token
+                        });
+                    }
+                    
+                    return { success: true, token: data.token };
+                } else {
+                    console.error('Registration failed:', data.error);
+                    return { success: false, error: data.error };
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Logout function
+        window.logout = function() {
+            localStorage.removeItem('sheetnext_token');
+            localStorage.removeItem('sheetnext_user_id');
+            console.log('✓ Logged out');
+            location.reload();
+        };
+
+        // Set Groq API Key in user settings (for advanced users)
+        window.setGroqApiKey = async function(apiKey) {
+            const token = localStorage.getItem('sheetnext_token');
+            
+            if (!token) {
+                console.error('User not authenticated');
+                return { success: false, error: 'Not authenticated' };
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/groq-api-key', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ groq_api_key: apiKey })
+                });
+
+                const data = await response.json();
+                console.log('✓ Groq API key updated');
+                return { success: true };
+            } catch (error) {
+                console.error('Error setting API key:', error);
+                return { success: false, error: error.message };
+            }
+        };
     </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 /** @typedef {import('../Workbook/Workbook.js').default} SheetNext */
+import getSvg from '../../assets/mainSvgs.js';
 
 export default class Utils {
     static _modalDragInitialized = false;
@@ -349,5 +350,10 @@ export default class Utils {
             isDragging = false;
             currentModal = null;
         });
+    }
+
+    /** @param {string} name @param {string} [className=''] @returns {string} Get SVG as HTML string. */
+    getSvg(name, className = '') {
+        return getSvg(name, className);
     }
 }

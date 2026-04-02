@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { audioModel } from '../models/Audio.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { upload } from '../server.js';
+import { upload } from '../middleware/multer.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);

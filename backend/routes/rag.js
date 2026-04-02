@@ -122,4 +122,57 @@ router.get('/stats/summary', async (req, res) => {
   }
 });
 
+// Generate embeddings for text chunks
+router.post('/embed-chunks', async (req, res) => {
+  try {
+    const { chunks } = req.body;
+    
+    if (!chunks || !Array.isArray(chunks)) {
+      return res.status(400).json({ error: 'Chunks array required' });
+    }
+    
+    // Simple hash-based embedding generation for demonstration
+    // In production, use a proper embedding service (Groq embeddings, OpenAI, etc.)
+    const embeddedChunks = chunks.map((chunk, index) => {
+      const embedding = generateSimpleEmbedding(chunk);
+      return {
+        id: `chunk_${Date.now()}_${index}`,
+        text: chunk,
+        embedding: embedding,
+        metadata: { index, length: chunk.length }
+      };
+    });
+    
+    res.json(embeddedChunks);
+  } catch (error) {
+    console.error('Embedding error:', error);
+    res.status(500).json({ error: 'Failed to generate embeddings' });
+  }
+});
+
+/**
+ * Generate simple embedding (hash-based for demo)
+ * In production, replace with actual embedding model
+ */
+function generateSimpleEmbedding(text) {
+  // Create a simple 768-dimensional embedding from text
+  // This is for demonstration only - use real embeddings in production
+  const embedding = new Float32Array(768);
+  
+  // Hash the text to seed the embedding
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Generate embedding based on hash
+  for (let i = 0; i < 768; i++) {
+    embedding[i] = Math.sin(hash ^ i) / Math.sqrt(768);
+  }
+  
+  return Array.from(embedding);
+}
+
 export default router;

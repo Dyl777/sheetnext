@@ -292,6 +292,279 @@ For complete documentation, see:
 - [AI_INTEGRATION_GUIDE.md](./AI_INTEGRATION_GUIDE.md) - Full AI integration guide
 - [MULTI_CONVERSATION_AND_RAG_GUIDE.md](./MULTI_CONVERSATION_AND_RAG_GUIDE.md) - Multi-conversation & RAG guide
 
+## 🗄️ Backend Setup & Database Configuration
+
+SheetNext includes a full-featured backend for managing conversations, documents, user authentication, and API integration with Groq and other LLM providers.
+
+### Prerequisites
+
+- **PostgreSQL 13+** - Database server
+- **Node.js 16+** - Backend runtime
+- **npm or yarn** - Package manager
+
+### Step 1: PostgreSQL Installation & Database Setup
+
+#### Create Database and User
+
+```bash
+# Connect to PostgreSQL as superuser
+psql -U postgres
+
+# In psql shell, run:
+CREATE DATABASE sheetnext;
+CREATE USER sheetnext WITH ENCRYPTED PASSWORD 'sheetnext';
+GRANT ALL PRIVILEGES ON DATABASE sheetnext TO sheetnext;
+```
+
+#### Grant Schema Permissions
+
+This is critical to avoid `permission denied for schema public` errors:
+
+```bash
+psql -U postgres -d sheetnext
+```
+
+Then in psql shell:
+
+```sql
+GRANT USAGE ON SCHEMA public TO sheetnext;
+GRANT CREATE ON SCHEMA public TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO sheetnext;
+```
+
+Alternatively, run as a single command:
+
+```bash
+# Windows PowerShell
+$env:PGPASSWORD="postgres"; & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d sheetnext << 'EOF'
+GRANT USAGE ON SCHEMA public TO sheetnext;
+GRANT CREATE ON SCHEMA public TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO sheetnext;
+EOF
+
+# macOS/Linux
+PGPASSWORD=postgres psql -U postgres -d sheetnext << 'EOF'
+GRANT USAGE ON SCHEMA public TO sheetnext;
+GRANT CREATE ON SCHEMA public TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO sheetnext;
+EOF
+```
+
+### Step 2: Initialize Database Schema
+
+Navigate to the backend directory and run the schema initialization:
+
+```bash
+# Windows PowerShell
+$env:PGPASSWORD="postgres"; & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d sheetnext -f ".\database\schema.sql"
+
+# macOS/Linux
+PGPASSWORD=postgres psql -U postgres -d sheetnext -f ./database/schema.sql
+```
+
+This creates the following tables:
+- `users` - User accounts and authentication
+- `conversations` - AI conversation sessions
+- `messages` - Conversation messages and history
+- `documents` - Uploaded documents for RAG
+- `document_chunks` - Document chunks for semantic search
+- `sheet_contexts` - Spreadsheet state snapshots
+- `api_usage` - API call tracking and analytics
+- `user_settings` - User preferences and configuration
+
+### Step 3: Backend Installation
+
+```bash
+cd backend
+npm install
+```
+
+### Step 4: Environment Configuration
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=sheetnext
+DB_USER=sheetnext
+DB_PASSWORD=sheetnext
+
+# API Keys
+GROQ_API_KEY=your_groq_api_key_here
+JWT_SECRET=your_jwt_secret_here
+
+# Server
+PORT=3000
+NODE_ENV=development
+
+# llama-server
+LLAMA_SERVER_URL=http://localhost:8080/v1/chat/completions
+
+# Optional: Backend URL for frontend
+BACKEND_URL=http://localhost:3000
+```
+
+### Step 5: Start Backend Server
+
+```bash
+npm run dev
+```
+
+The backend will start on `http://localhost:3000` with:
+- ✅ PostgreSQL database connected
+- ✅ Authentication endpoints active
+- ✅ AI proxy routes ready
+- ✅ Document storage enabled
+- ✅ RAG system initialized
+
+### Backend API Endpoints
+
+#### Authentication
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/login` - User login
+- `PUT /api/auth/groq-api-key` - Set user's Groq API key
+
+#### Conversations
+- `GET /api/conversations` - List user's conversations
+- `POST /api/conversations` - Create new conversation
+- `GET /api/conversations/:id` - Get conversation with messages
+- `PUT /api/conversations/:id` - Update conversation settings
+- `DELETE /api/conversations/:id` - Delete conversation
+
+#### Messages
+- `POST /api/conversations/:id/messages` - Add message to conversation
+- `GET /api/conversations/:id/messages` - Get conversation messages
+
+#### AI/Groq Integration
+- `POST /api/groq/chat/completions` - Chat completion (with streaming support)
+- `GET /api/groq/models` - List available Groq models
+- `POST /api/groq/vision/analyze` - Image analysis with vision models
+
+#### Documents & RAG
+- `POST /api/documents/upload` - Upload document for RAG
+- `GET /api/documents` - List user's documents
+- `POST /api/documents/search` - Search documents with embedding
+- `DELETE /api/documents/:id` - Delete document
+
+#### Tracking & Analytics
+- `POST /api/tracking/log` - Log user actions
+- `GET /api/tracking/stats` - Get usage statistics
+
+### Frontend Integration
+
+Update your SheetNext frontend configuration to use the backend:
+
+```javascript
+import SheetNext from 'sheetnext';
+
+const SN = new SheetNext(document.querySelector('#SNContainer'), {
+  // Backend connection
+  BACKEND_URL: 'http://localhost:3000',
+  
+  // AI Configuration via backend proxy
+  AI_URL: 'http://localhost:3000/api/groq/chat/completions',
+  AI_MODEL: 'llama-3.2-90b-vision-preview',
+  AI_STREAM: true,
+  AI_TOOLS: true,
+  
+  // Authentication token (after login)
+  AI_TOKEN: localStorage.getItem('sheetnext_token'),
+  
+  // RAG Configuration
+  AI_RAG_ENABLED: true,
+  
+  // File upload handler
+  onFileUpload: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('http://localhost:3000/api/documents/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('sheetnext_token')}`
+      },
+      body: formData
+    });
+    
+    return await response.json();
+  }
+});
+
+// Authentication flow
+async function login(email, password) {
+  const response = await fetch('http://localhost:3000/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  
+  const data = await response.json();
+  if (data.token) {
+    localStorage.setItem('sheetnext_token', data.token);
+    location.reload(); // Reload to reinitialize with token
+  }
+  return data;
+}
+```
+
+### Troubleshooting
+
+#### PostgreSQL Permission Errors
+
+**Error:** `permission denied for schema public`
+
+**Solution:** Run the schema permission grants as the postgres superuser:
+
+```bash
+$env:PGPASSWORD="postgres"; & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d sheetnext << 'EOF'
+GRANT USAGE ON SCHEMA public TO sheetnext;
+GRANT CREATE ON SCHEMA public TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO sheetnext;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO sheetnext;
+EOF
+```
+
+#### Connection Failed
+
+**Error:** `connection to server at "localhost" (::1), port 5432 failed`
+
+**Solution:** 
+- Verify PostgreSQL is running: `pg_isready`
+- Check if port 5432 is accessible
+- Verify database and user credentials in `.env`
+
+#### Database Already Exists
+
+**Error:** `database "sheetnext" already exists`
+
+**Solution:** Drop and recreate the database:
+
+```bash
+psql -U postgres -c "DROP DATABASE IF EXISTS sheetnext;"
+psql -U postgres -c "CREATE DATABASE sheetnext;"
+psql -U postgres -d sheetnext -f backend/database/schema.sql
+```
+
+### Backend Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Frontend      │────▶│   Backend API    │────▶│   PostgreSQL    │
+│  (SheetNext)    │◀────│   (Express.js)   │◀────│   Database      │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+                              │
+                              ▼
+                        ┌──────────────────┐
+                        │   Groq API       │
+                        │   (LLM Inference)│
+                        └──────────────────┘
+```
+
 ## 🎯 Use Cases
 
 - Online reporting systems, BI analytics front-ends, business dashboards
